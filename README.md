@@ -19,11 +19,11 @@ A full-stack, production-ready Enterprise Resource Planning system built with **
 
 ---
 
-<img width="1590" height="813" alt="Screenshot 2026-06-14 031606" src="https://github.com/user-attachments/assets/8f1e602b-383e-4cfc-b4ee-aab24e737eab" />
-<img width="1535" height="810" alt="Screenshot 2026-06-14 031547" src="https://github.com/user-attachments/assets/690a64db-1591-47b4-a52a-6eb898d2a367" />
-<img width="1907" height="902" alt="Screenshot 2026-06-14 031523" src="https://github.com/user-attachments/assets/2c6a1bba-8763-4eb3-9b8c-428a6c4b07d2" />
-<img width="1904" height="911" alt="Screenshot 2026-06-14 031508" src="https://github.com/user-attachments/assets/460e056a-0fc8-46d9-b279-1830b6c7b260" />
 <img width="1581" height="813" alt="Screenshot 2026-06-14 031421" src="https://github.com/user-attachments/assets/f7d88b37-3aaf-44db-893a-bbadbc9c5054" />
+<img width="1904" height="911" alt="Screenshot 2026-06-14 031508" src="https://github.com/user-attachments/assets/460e056a-0fc8-46d9-b279-1830b6c7b260" />
+<img width="1907" height="902" alt="Screenshot 2026-06-14 031523" src="https://github.com/user-attachments/assets/2c6a1bba-8763-4eb3-9b8c-428a6c4b07d2" />
+<img width="1535" height="810" alt="Screenshot 2026-06-14 031547" src="https://github.com/user-attachments/assets/690a64db-1591-47b4-a52a-6eb898d2a367" />
+<img width="1590" height="813" alt="Screenshot 2026-06-14 031606" src="https://github.com/user-attachments/assets/8f1e602b-383e-4cfc-b4ee-aab24e737eab" />
 
 
 ## Tech Stack
