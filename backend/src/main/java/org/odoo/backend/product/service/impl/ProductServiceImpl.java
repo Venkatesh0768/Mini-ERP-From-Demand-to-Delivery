@@ -1,5 +1,8 @@
 package org.odoo.backend.product.service.impl;
 
+import org.odoo.backend.audit.model.AuditAction;
+import org.odoo.backend.audit.model.AuditEntityType;
+import org.odoo.backend.audit.service.AuditService;
 import org.odoo.backend.product.dto.CreateProductRequest;
 import org.odoo.backend.product.dto.ProductResponse;
 import org.odoo.backend.product.dto.UpdateProductRequest;
@@ -25,6 +28,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final VendorRepository vendorRepository;
+    private final AuditService auditService;
 
     @Override
     public ProductResponse createProduct(CreateProductRequest request) {
@@ -58,6 +62,9 @@ public class ProductServiceImpl implements ProductService {
 
         Product saved =
                 productRepository.save(product);
+
+       auditService.log(AuditAction.CREATE, AuditEntityType.PRODUCT, saved.getId().toString(), saved.getName(), "Created Product " + saved.getName());
+
 
         return mapToResponse(saved);
     }

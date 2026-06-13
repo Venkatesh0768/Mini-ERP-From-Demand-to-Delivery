@@ -2,6 +2,9 @@ package org.odoo.backend.auth.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.odoo.backend.audit.model.AuditAction;
+import org.odoo.backend.audit.model.AuditEntityType;
+import org.odoo.backend.audit.service.AuditService;
 import org.odoo.backend.auth.dto.*;
 import org.odoo.backend.auth.exception.AccountLockedException;
 import org.odoo.backend.auth.exception.EmailAlreadyExistsException;
@@ -46,6 +49,7 @@ public class AuthService {
     private final OTPService otpService;
     private final RefreshTokenService refreshTokenService;
     private final ActivationTokenService activationTokenService;
+    private final AuditService auditService;
 
     @Value("${jwt.expiration}")
     private long jwtExpirationMs;
@@ -120,6 +124,14 @@ public class AuthService {
                     .expiresIn(jwtExpirationMs / 1000)
                     .user(convertToUserDTO(user))
                     .build();
+
+            auditService.log(
+                    AuditAction.LOGIN,
+                    AuditEntityType.USER,
+                    user.getId().toString(),
+                    user.getEmail(),
+                    "User Logged In"
+            );
 
             return new LoginResult(authResponse, refresh.getToken());
 

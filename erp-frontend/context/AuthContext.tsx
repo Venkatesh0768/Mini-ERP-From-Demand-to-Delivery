@@ -61,13 +61,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  /**
-   * On mount: try to restore session silently.
-   * - Calls GET /user/me with the access token (if in memory)
-   * - If 401, the Axios interceptor fires POST /auth/refresh-token (cookie sent automatically)
-   * - On success: auth state is populated without any user action
-   * - On failure: status → "unauthenticated"
-   */
+
   useEffect(() => {
     let cancelled = false;
 

@@ -2,6 +2,9 @@ package org.odoo.backend.manufacturing.service.impl;
 
 
 import lombok.RequiredArgsConstructor;
+import org.odoo.backend.audit.model.AuditAction;
+import org.odoo.backend.audit.model.AuditEntityType;
+import org.odoo.backend.audit.service.AuditService;
 import org.odoo.backend.bom.model.BOM;
 import org.odoo.backend.bom.model.BOMComponent;
 import org.odoo.backend.bom.repositories.BOMRepository;
@@ -31,6 +34,7 @@ public class ManufacturingServiceImpl implements ManufacturingService {
     private final ProductRepository productRepository;
 
     private final BOMRepository bomRepository;
+    private final AuditService auditService;
 
     @Override
     public ManufacturingOrderResponse
@@ -192,6 +196,14 @@ public class ManufacturingServiceImpl implements ManufacturingService {
 
         order.setStatus(
                 ManufacturingOrderStatus.COMPLETED);
+        auditService.log(
+                AuditAction.COMPLETE,
+                AuditEntityType.MANUFACTURING_ORDER,
+                order.getId().toString(),
+                order.getOrderNumber(),
+                "Completed Manufacturing Order "
+                        + order.getOrderNumber()
+        );
 
         return mapToResponse(
                 manufacturingOrderRepository.save(order));

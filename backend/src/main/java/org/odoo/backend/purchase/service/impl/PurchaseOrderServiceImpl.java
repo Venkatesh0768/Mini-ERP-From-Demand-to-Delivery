@@ -2,6 +2,9 @@ package org.odoo.backend.purchase.service.impl;
 
 
 import lombok.RequiredArgsConstructor;
+import org.odoo.backend.audit.model.AuditAction;
+import org.odoo.backend.audit.model.AuditEntityType;
+import org.odoo.backend.audit.service.AuditService;
 import org.odoo.backend.product.model.Product;
 import org.odoo.backend.product.repositories.ProductRepository;
 import org.odoo.backend.purchase.dto.*;
@@ -27,6 +30,7 @@ public class PurchaseOrderServiceImpl
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final ProductRepository productRepository;
     private final VendorRepository vendorRepository;
+    private final AuditService auditService;
 
     @Override
     public PurchaseOrderResponse createPurchaseOrder(
@@ -83,6 +87,14 @@ public class PurchaseOrderServiceImpl
         PurchaseOrder saved =
                 purchaseOrderRepository.save(
                         purchaseOrder);
+        auditService.log(
+                AuditAction.CREATE,
+                AuditEntityType.PURCHASE_ORDER,
+                purchaseOrder.getId().toString(),
+                purchaseOrder.getOrderNumber(),
+                "Created Purchase Order "
+                        + purchaseOrder.getOrderNumber()
+        );
 
         return mapToResponse(saved);
     }

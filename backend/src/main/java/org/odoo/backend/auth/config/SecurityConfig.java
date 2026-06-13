@@ -138,6 +138,17 @@ public class SecurityConfig {
                                 "BUSINESS_OWNER",
                                 "PURCHASE_USER"
                         )
+                        .requestMatchers("/stock-adjustments/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "BUSINESS_OWNER",
+                                "INVENTORY_MANAGER"
+                        )
+                        .requestMatchers("/audit-logs/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "BUSINESS_OWNER"
+                        )
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/vendors/**")
 
