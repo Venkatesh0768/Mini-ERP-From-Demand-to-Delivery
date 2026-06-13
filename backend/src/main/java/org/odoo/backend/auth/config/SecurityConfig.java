@@ -107,6 +107,12 @@ public class SecurityConfig {
                                 "BUSINESS_OWNER",
                                 "MANUFACTURING_USER"
                         )
+                        .requestMatchers("/manufacturing-orders/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "BUSINESS_OWNER",
+                                "MANUFACTURING_USER"
+                        )
                         .requestMatchers("/customers/**")
                         .hasAnyRole(
                                 "ADMIN",
