@@ -149,6 +149,11 @@ public class SecurityConfig {
                                 "ADMIN",
                                 "BUSINESS_OWNER"
                         )
+                        .requestMatchers("/dashboard/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "BUSINESS_OWNER"
+                        )
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/vendors/**")
 

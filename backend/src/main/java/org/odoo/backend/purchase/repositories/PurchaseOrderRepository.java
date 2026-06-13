@@ -14,4 +14,6 @@ public interface PurchaseOrderRepository
     Optional<PurchaseOrder> findByOrderNumber(String orderNumber);
 
     List<PurchaseOrder> findByStatus(PurchaseOrderStatus status);
+
+    long count();
 }

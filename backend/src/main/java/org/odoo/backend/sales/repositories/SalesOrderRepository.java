@@ -14,4 +14,6 @@ public interface SalesOrderRepository
     Optional<SalesOrder> findByOrderNumber(String orderNumber);
 
     List<SalesOrder> findByStatus(SalesOrderStatus status);
+    long count();
+
 }

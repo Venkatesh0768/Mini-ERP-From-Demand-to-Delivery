@@ -13,4 +13,6 @@ public interface ManufacturingOrderRepository extends JpaRepository<Manufacturin
     Optional<ManufacturingOrder> findByOrderNumber(String orderNumber);
 
     List<ManufacturingOrder> findByStatus(ManufacturingOrderStatus status);
+
+    long count();
 }
