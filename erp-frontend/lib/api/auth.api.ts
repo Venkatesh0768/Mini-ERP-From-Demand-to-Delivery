@@ -1,5 +1,6 @@
 import apiClient from "./client";
 import type {
+  ActivateAccountRequest,
   ApiResponse,
   AuthResponse,
   ChangePasswordRequest,
@@ -31,6 +32,13 @@ export const authApi = {
 
   resetPassword: (data: ResetPasswordRequest) =>
     apiClient.post<ApiResponse>("/auth/reset-password", data),
+
+  /**
+   * Activate an admin-created account. The user provides the token from
+   * their invitation email and their chosen password.
+   */
+  activateAccount: (data: ActivateAccountRequest) =>
+    apiClient.post<ApiResponse>("/auth/activate", data),
 
   /**
    * Exchange the HttpOnly refresh token cookie for a new access token.

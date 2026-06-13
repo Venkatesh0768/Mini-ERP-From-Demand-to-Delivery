@@ -6,7 +6,9 @@ import org.odoo.backend.auth.dto.*;
 import org.odoo.backend.auth.exception.AccountLockedException;
 import org.odoo.backend.auth.exception.EmailAlreadyExistsException;
 import org.odoo.backend.auth.exception.EmailNotVerifiedException;
+import org.odoo.backend.auth.exception.InvalidTokenException;
 import org.odoo.backend.auth.exception.UserNotFoundException;
+import org.odoo.backend.auth.model.ActivationToken;
 import org.odoo.backend.auth.model.RefreshToken;
 import org.odoo.backend.auth.model.Role;
 import org.odoo.backend.auth.model.RoleType;
@@ -28,25 +30,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Core authentication service.
- *
- * <h3>Responsibilities</h3>
- * <ul>
- *   <li>Signup with OTP email verification</li>
- *   <li>Login with brute-force lockout</li>
- *   <li>Password reset / change</li>
- *   <li>Profile management</li>
- * </ul>
- *
- * <h3>What this service does NOT do</h3>
- * <ul>
- *   <li><b>Refresh token CRUD</b> → delegated to {@link RefreshTokenService}</li>
- *   <li><b>OTP generation/validation</b> → delegated to {@link OTPService}</li>
- *   <li><b>Cookie building</b> → delegated to
- *       {@code org.blog.backend.auth.security.CookieService} (called from controller)</li>
- * </ul>
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -62,18 +45,12 @@ public class AuthService {
     private final JwtTokenProvider tokenProvider;
     private final OTPService otpService;
     private final RefreshTokenService refreshTokenService;
+    private final ActivationTokenService activationTokenService;
 
     @Value("${jwt.expiration}")
     private long jwtExpirationMs;
 
-    // ─── Signup ──────────────────────────────────────────────────────────────
 
-    /**
-     * Register a new local user, send OTP for email verification.
-     *
-     * @param request validated signup payload
-     * @return success envelope (no tokens — user must verify email first)
-     */
     @Transactional
     public ApiResponse signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -103,20 +80,7 @@ public class AuthService {
                 "Registration successful. Please check your email for the verification OTP.", null);
     }
 
-    // ─── Login ───────────────────────────────────────────────────────────────
 
-    /**
-     * Authenticate with email/password; returns tokens on success.
-     *
-     * <p>The returned {@link AuthResponse} contains the access token and user
-     * data.  The <b>refresh token</b> is returned separately so the controller
-     * can place it in an HttpOnly cookie — it is deliberately absent from the
-     * response body ({@link AuthResponse#getRefreshToken()} is not serialized).</p>
-     *
-     * @param request    validated login payload
-     * @param deviceInfo truncated User-Agent from the request
-     * @return access token + user info + raw refresh token for cookie
-     */
     @Transactional
     public LoginResult login(LoginRequest request, String deviceInfo) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -207,17 +171,7 @@ public class AuthService {
         return new ApiResponse(true, "OTP sent to " + email, null);
     }
 
-    /**
-     * Exchange a valid refresh token for a new access token.
-     *
-     * <p>Implements <b>refresh token rotation</b> — the old token is deleted
-     * and a brand-new one is issued. This limits the blast radius if a token
-     * is ever stolen: it becomes invalid after one use.</p>
-     *
-     * @param rawToken   the token value from the cookie
-     * @param deviceInfo truncated User-Agent
-     * @return new access token + new raw refresh token (for cookie rotation)
-     */
+
     @Transactional
     public LoginResult refreshAccessToken(String rawToken, String deviceInfo) {
         RefreshToken refreshToken = refreshTokenService.verifyRefreshToken(rawToken);
@@ -240,26 +194,14 @@ public class AuthService {
         return new LoginResult(authResponse, newRefreshToken.getToken());
     }
 
-    // ─── Token Refresh ────────────────────────────────────────────────────────
 
-    /**
-     * Revoke a single session (single-device logout).
-     *
-     * @param rawToken the refresh token value from the cookie
-     */
     @Transactional
     public ApiResponse logout(String rawToken) {
         refreshTokenService.deleteByTokenValue(rawToken);
         return new ApiResponse(true, "Logged out successfully", null);
     }
 
-    // ─── Logout ───────────────────────────────────────────────────────────────
 
-    /**
-     * Revoke all sessions for a user (logout from all devices).
-     *
-     * @param email the authenticated user's email
-     */
     @Transactional
     public ApiResponse logoutAll(String email) {
         User user = userRepository.findByEmail(email)
@@ -269,9 +211,7 @@ public class AuthService {
         return new ApiResponse(true, "All sessions revoked successfully", null);
     }
 
-    /**
-     * Initiate password reset — always returns success to prevent user enumeration.
-     */
+
     @Transactional
     public void requestPasswordReset(String email) {
         // Find user silently — do not reveal whether the email exists
@@ -279,7 +219,6 @@ public class AuthService {
                 .ifPresent(user -> otpService.generateAndSendPasswordResetOTP(email));
     }
 
-    // ─── Password Reset ───────────────────────────────────────────────────────
 
     @Transactional
     public ApiResponse resetPassword(ResetPasswordRequest request) {
@@ -341,12 +280,39 @@ public class AuthService {
         return new ApiResponse(true, "Profile updated successfully", convertToUserDTO(user));
     }
 
-    // ─── Profile ─────────────────────────────────────────────────────────────
+
+    // ─── Admin-created user account activation ───────────────────────────────
 
     /**
-     * Fetch a user and return it as a {@link UserDTO}.
-     * Used by controllers that need the current user's profile.
+     * Activate a user account created by an admin.
+     * The user clicks the link in their invitation email, which provides a
+     * one-time activation token. They also supply their chosen password.
+     *
+     * <ul>
+     *   <li>Validates and consumes the activation token (single-use, 72h TTL)</li>
+     *   <li>Sets the user's password (bcrypt-encoded)</li>
+     *   <li>Marks the account as email-verified and enabled</li>
+     * </ul>
      */
+    @Transactional
+    public ApiResponse activateAccount(ActivateAccountRequest request) {
+        ActivationToken activationToken = activationTokenService.validateAndConsume(request.getToken());
+
+        User user = userRepository.findByEmail(activationToken.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found for activation token"));
+
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setEmailVerified(true);
+        user.setEnabled(true);
+        userRepository.save(user);
+
+        log.info("Account activated for user={}", user.getEmail());
+        return new ApiResponse(true,
+                "Account activated successfully. You can now log in.", null);
+    }
+
+    // ─── Profile & password helpers ──────────────────────────────────────────
+
     public UserDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -371,12 +337,8 @@ public class AuthService {
                 .build();
     }
 
-    // ─── Shared mapper ───────────────────────────────────────────────────────
 
-    /**
-     * Immutable carrier for a login result: the serializable response body and
-     * the raw refresh token that the controller places in an HttpOnly cookie.
-     */
+
     public record LoginResult(AuthResponse authResponse, String rawRefreshToken) {
     }
 }

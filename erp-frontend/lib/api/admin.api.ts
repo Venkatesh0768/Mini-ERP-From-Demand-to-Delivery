@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { ApiResponse, AssignRolesRequest, User } from "@/types/auth.types";
+import type { AdminCreateUserRequest, ApiResponse, AssignRolesRequest, User } from "@/types/auth.types";
 import type { AxiosResponse } from "axios";
 
 export interface PageResponse<T> {
@@ -20,6 +20,11 @@ export const adminApi = {
 
   getUserById: (id: string): Promise<AxiosResponse<ApiResponse<User>>> =>
     apiClient.get(`/admin/users/${id}`),
+
+  createUser: (
+    data: AdminCreateUserRequest
+  ): Promise<AxiosResponse<ApiResponse<User>>> =>
+    apiClient.post("/admin/users", data),
 
   assignRoles: (
     id: string,

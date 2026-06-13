@@ -56,6 +56,7 @@ public class SecurityConfig {
             "/auth/refresh-token",
             "/auth/forgot-password",
             "/auth/reset-password",
+            "/auth/activate",
             // OAuth2
             "/oauth2/**",
             "/login/oauth2/**",

@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, RefreshCw, Shield, Users } from "lucide-react";
+import { Loader2, RefreshCw, Shield, UserPlus, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/lib/utils/roles";
 import { adminApi, PageResponse } from "@/lib/api/admin.api";
 import { Navbar } from "@/components/layout/Navbar";
 import { UserTable } from "@/components/admin/UserTable";
+import { CreateUserModal } from "@/components/admin/CreateUserModal";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -17,10 +18,12 @@ export default function AdminPage() {
   const { user, status } = useAuth();
   const router = useRouter();
 
-  const [pageData, setPageData] = useState<PageResponse<User> | null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<string | null>(null);
-  const [page, setPage]         = useState(0);
+  const [pageData, setPageData]       = useState<PageResponse<User> | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState<string | null>(null);
+  const [page, setPage]               = useState(0);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createSuccess, setCreateSuccess]     = useState<string | null>(null);
 
   const fetchUsers = useCallback(async (p: number) => {
     setLoading(true); setError(null);
@@ -37,6 +40,12 @@ export default function AdminPage() {
       router.replace("/login");
     }
   }, [status, user, page, fetchUsers, router]);
+
+  const handleCreateSuccess = () => {
+    setCreateSuccess("User created successfully. An activation email has been sent.");
+    fetchUsers(page);
+    setTimeout(() => setCreateSuccess(null), 5000);
+  };
 
   if (status === "loading" || (loading && !pageData)) {
     return (
@@ -66,15 +75,22 @@ export default function AdminPage() {
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Admin Panel</h1>
             <p className="text-sm text-gray-500 mt-0.5">Manage users, assign roles, and control access.</p>
           </div>
-          <Button variant="secondary" size="sm" onClick={() => fetchUsers(page)} disabled={loading}>
-            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => fetchUsers(page)} disabled={loading}>
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+              Refresh
+            </Button>
+            <Button size="sm" onClick={() => setShowCreateModal(true)}>
+              <UserPlus size={13} />
+              Create User
+            </Button>
+          </div>
         </div>
 
         {error && <Alert variant="error" message={error} />}
+        {createSuccess && <Alert variant="success" message={createSuccess} />}
 
-        {/* Stat */}
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
             <div className="flex items-center gap-2 mb-2">
@@ -112,6 +128,14 @@ export default function AdminPage() {
           </div>
         </Card>
       </div>
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <CreateUserModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={handleCreateSuccess}
+        />
+      )}
     </div>
   );
 }

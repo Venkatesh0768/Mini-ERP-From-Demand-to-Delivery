@@ -6,10 +6,8 @@ import { isAxiosError } from "axios";
 import { adminApi } from "@/lib/api/admin.api";
 import { Alert } from "@/components/ui/Alert";
 import { RoleBadge } from "./RoleBadge";
-import { displayName } from "@/lib/utils/roles";
+import { ALL_ROLES, displayName, roleLabel } from "@/lib/utils/roles";
 import type { RoleType, User } from "@/types/auth.types";
-
-const ALL_ROLES: RoleType[] = ["ROLE_USER", "ROLE_ADMIN", "ROLE_VENDOR"];
 
 interface UserTableProps {
   users: User[];
@@ -111,7 +109,7 @@ export function UserTable({ users, onRefresh }: UserTableProps) {
                                 : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
                             }`}
                           >
-                            {role.replace("ROLE_", "")}
+                            {roleLabel(role)}
                           </button>
                         ))}
                       </div>

@@ -1,6 +1,13 @@
 // ─── User & Auth Types ───────────────────────────────────────────────────────
 
-export type RoleType = "ROLE_USER" | "ROLE_ADMIN" | "ROLE_VENDOR";
+export type RoleType =
+  | "ROLE_USER"
+  | "ROLE_ADMIN"
+  | "ROLE_SALES_USER"
+  | "ROLE_PURCHASE_USER"
+  | "ROLE_MANUFACTURING_USER"
+  | "ROLE_INVENTORY_MANAGER"
+  | "ROLE_BUSINESS_OWNER";
 
 export interface User {
   id: string;
@@ -54,6 +61,19 @@ export interface UpdateProfileRequest {
 
 export interface AssignRolesRequest {
   roles: RoleType[];
+}
+
+export interface AdminCreateUserRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+  position?: string;
+  roles: RoleType[];
+}
+
+export interface ActivateAccountRequest {
+  token: string;
+  password: string;
 }
 
 // ─── Response Types ───────────────────────────────────────────────────────────

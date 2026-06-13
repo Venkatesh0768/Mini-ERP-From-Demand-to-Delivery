@@ -35,6 +35,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(request));
     }
 
+    @Operation(summary = "Activate an admin-created account — user sets their password via the emailed link")
+    @PostMapping("/activate")
+    public ResponseEntity<ApiResponse> activateAccount(@Valid @RequestBody ActivateAccountRequest request) {
+        return ResponseEntity.ok(authService.activateAccount(request));
+    }
+
     @Operation(summary = "Verify email address using OTP sent during signup")
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse> verifyOTP(@Valid @RequestBody OTPVerificationRequest request) {

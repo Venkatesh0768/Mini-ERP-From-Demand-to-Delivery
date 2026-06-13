@@ -35,28 +35,25 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
+
+    private String position;
+
     @Column(nullable = false)
     private boolean emailVerified = false;
 
     @Column(nullable = false)
     private boolean enabled = false;
 
-    /**
-     * Authentication provider: "local" | "google" | "github"
-     */
+
     @Column(nullable = false)
     @Builder.Default
     private String provider = "local";
 
-    /**
-     * Subject / user-id returned by the OAuth2 provider (null for local users).
-     */
+
     @Column
     private String providerId;
 
-    /**
-     * Profile picture URL — populated from OAuth2 provider data.
-     */
+
     @Column
     private String profileImageUrl;
 
