@@ -34,6 +34,7 @@ import { isAdmin } from "@/lib/utils/roles";
 import { canApi } from "@/lib/utils/accessibleApis";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { AccessDenied } from "@/components/ui/AccessDenied";
+import { Pagination } from "@/components/ui/Pagination";
 
 type Tab = "all" | PurchaseOrderStatus;
 
@@ -61,6 +62,8 @@ export default function PurchasesPage() {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState<CreatePurchaseOrderRequest>({ vendorId: "", items: [] });
@@ -157,6 +160,9 @@ export default function PurchasesPage() {
     return matchTab && matchSearch;
   });
 
+  useEffect(() => { setPage(0); }, [search, tab]);
+  const pageSlice = filtered.slice(page * pageSize, (page + 1) * pageSize);
+
   const getTotal = (o: PurchaseOrder) =>
     o.items?.reduce((sum, i) => sum + (i.totalCost ?? 0), 0) ?? 0;
 
@@ -218,7 +224,7 @@ export default function PurchasesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((o) => (
+                {pageSlice.map((o) => (
                   <tr key={o.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <span className="font-mono text-xs font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded">{o.orderNumber}</span>
@@ -250,6 +256,15 @@ export default function PurchasesPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="px-4 pb-3">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+            />
           </div>
         </div>
       )}

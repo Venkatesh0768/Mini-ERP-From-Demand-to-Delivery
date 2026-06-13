@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
-import { Lock, LogOut, Loader2, User } from "lucide-react";
+import { Lock, LogOut, Loader2, User, Camera, Upload } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { userApi } from "@/lib/api/auth.api";
 import { initials } from "@/lib/utils/roles";
@@ -12,6 +12,23 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 
+// ─── Cloudinary unsigned upload ───────────────────────────────────────────────
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "";
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? "";
+
+async function uploadToCloudinary(file: File): Promise<string> {
+  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", UPLOAD_PRESET);
+  fd.append("folder", "erp_profiles");
+  const res = await fetch(url, { method: "POST", body: fd });
+  if (!res.ok) throw new Error("Cloudinary upload failed");
+  const json = await res.json();
+  return json.secure_url as string;
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const { user, status, refreshUser, logout } = useAuth();
   const router = useRouter();
@@ -30,11 +47,10 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
-      {/* Page header */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-indigo-600 mb-1">Account</p>
         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Settings</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Manage your profile and security preferences.</p>
+        <p className="text-sm text-gray-500 mt-0.5">Manage your profile, avatar, and security preferences.</p>
       </div>
 
       <ProfileSection user={user} refreshUser={refreshUser} />
@@ -45,37 +61,130 @@ export default function ProfilePage() {
 }
 
 /* ── Profile section ──────────────────────────────────────────────────────── */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ProfileSection({ user, refreshUser }: { user: any; refreshUser: () => Promise<void> }) {
-  const [form, setForm] = useState({ firstName: user?.firstName ?? "", lastName: user?.lastName ?? "" });
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [form, setForm] = useState({
+    firstName: user?.firstName ?? "",
+    lastName: user?.lastName ?? "",
+  });
+  const [avatarUrl, setAvatarUrl] = useState<string>(user?.profileImageUrl ?? "");
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Preview immediately
+    const objectUrl = URL.createObjectURL(file);
+    setAvatarUrl(objectUrl);
+    setAvatarError(null);
+    setAvatarLoading(true);
+
+    try {
+      if (!CLOUD_NAME || !UPLOAD_PRESET) {
+        throw new Error("Cloudinary is not configured. Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.");
+      }
+      const cloudUrl = await uploadToCloudinary(file);
+      setAvatarUrl(cloudUrl);
+      // Persist to backend
+      await userApi.updateProfile({ profileImageUrl: cloudUrl });
+      await refreshUser();
+      setSuccess("Profile image updated.");
+    } catch (err) {
+      setAvatarError(
+        isAxiosError(err)
+          ? (err.response?.data?.message ?? "Upload failed.")
+          : (err instanceof Error ? err.message : "Upload failed.")
+      );
+      // Revert preview to previous image
+      setAvatarUrl(user?.profileImageUrl ?? "");
+    } finally {
+      setAvatarLoading(false);
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.firstName.trim() || !form.lastName.trim()) return;
     setSuccess(null); setError(null); setLoading(true);
     try {
-      await userApi.updateProfile({ firstName: form.firstName.trim(), lastName: form.lastName.trim() });
+      await userApi.updateProfile({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
+      });
       await refreshUser();
       setSuccess("Profile updated successfully.");
     } catch (err) {
       setError(isAxiosError(err) ? (err.response?.data?.message ?? "Failed to update.") : "Failed to update.");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Card>
-      <CardHeader icon={<User size={16} />} title="Profile" description="Update your display name" />
+      <CardHeader icon={<User size={16} />} title="Profile" description="Update your display name and avatar" />
 
       {/* Avatar row */}
-      <div className="flex items-center gap-4 mb-5 pb-5 border-b border-gray-100">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 text-lg font-bold shrink-0">
-          {initials(user)}
+      <div className="flex items-center gap-5 mb-5 pb-5 border-b border-gray-100">
+        {/* Avatar with upload overlay */}
+        <div className="relative shrink-0 group">
+          <div className="h-16 w-16 rounded-full overflow-hidden bg-indigo-100 ring-2 ring-white shadow">
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-indigo-700 text-xl font-bold">
+                {initials(user)}
+              </div>
+            )}
+          </div>
+          {/* Upload button overlay */}
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={avatarLoading}
+            className="absolute inset-0 rounded-full flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+            title="Change photo"
+          >
+            {avatarLoading ? (
+              <Loader2 size={18} className="text-white animate-spin" />
+            ) : (
+              <Camera size={18} className="text-white" />
+            )}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
         </div>
-        <div>
-          <p className="text-sm font-semibold text-gray-900">{user?.email}</p>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{user?.email}</p>
           <p className="text-xs text-gray-500 capitalize mt-0.5">{user?.provider} account</p>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={avatarLoading}
+            className="mt-2 inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium disabled:opacity-50"
+          >
+            <Upload size={11} />
+            {avatarLoading ? "Uploading…" : "Change profile photo"}
+          </button>
+          {avatarError && <p className="text-xs text-red-600 mt-1">{avatarError}</p>}
         </div>
       </div>
 
@@ -95,6 +204,7 @@ function ProfileSection({ user, refreshUser }: { user: any; refreshUser: () => P
 }
 
 /* ── Security section ─────────────────────────────────────────────────────── */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function SecuritySection({ user, logout, router }: { user: any; logout: () => Promise<void>; router: any }) {
   const [form, setForm]       = useState({ currentPassword: "", newPassword: "", confirm: "" });
   const [errors, setErrors]   = useState<Partial<typeof form>>({});
@@ -125,7 +235,6 @@ function SecuritySection({ user, logout, router }: { user: any; logout: () => Pr
   return (
     <Card>
       <CardHeader icon={<Lock size={16} />} title="Security" description="Change your password" />
-
       {user?.provider !== "local" ? (
         <Alert variant="info" message={`You signed in with ${user?.provider}. Password management is handled by your OAuth provider.`} />
       ) : (
@@ -146,6 +255,7 @@ function SecuritySection({ user, logout, router }: { user: any; logout: () => Pr
 }
 
 /* ── Sessions section ─────────────────────────────────────────────────────── */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function SessionsSection({ logout, router }: { logout: () => Promise<void>; router: any }) {
   const [loading, setLoading] = useState(false);
 
@@ -160,12 +270,9 @@ function SessionsSection({ logout, router }: { logout: () => Promise<void>; rout
   return (
     <Card className="border-red-200">
       <CardHeader icon={<LogOut size={16} />} title="Sessions" description="Revoke all active sessions" />
-      <p className="text-sm text-gray-600 mb-4">
-        Sign out from all devices including this one. You will need to sign in again.
-      </p>
+      <p className="text-sm text-gray-600 mb-4">Sign out from all devices including this one. You will need to sign in again.</p>
       <Button variant="danger" size="sm" onClick={handleLogoutAll} loading={loading}>
-        <LogOut size={13} />
-        Sign out all devices
+        <LogOut size={13} /> Sign out all devices
       </Button>
     </Card>
   );

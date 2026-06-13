@@ -11,7 +11,13 @@ import {
   IndianRupee,
 } from "lucide-react";
 import { productsApi, vendorsApi } from "@/lib/api/erp.api";
-import type { Product, Vendor, CreateProductRequest, ProductType, ProcurementType } from "@/types/erp.types";
+import type {
+  Product,
+  Vendor,
+  CreateProductRequest,
+  ProductType,
+  ProcurementType,
+} from "@/types/erp.types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -20,8 +26,10 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageSpinner } from "@/components/ui/Spinner";
 import { Alert } from "@/components/ui/Alert";
 import { Input } from "@/components/ui/Input";
+import { Pagination } from "@/components/ui/Pagination";
 import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/lib/utils/roles";
+import { canApi } from "@/lib/utils/accessibleApis";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { AccessDenied } from "@/components/ui/AccessDenied";
 
@@ -69,6 +77,8 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   // Form modal
   const [formOpen, setFormOpen] = useState(false);
@@ -80,24 +90,31 @@ export default function ProductsPage() {
   // Delete confirm
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const fetchProducts = useCallback(() => {
     setLoading(true);
-    Promise.all([productsApi.getAll(), vendorsApi.getAll()])
+    // INVENTORY_MANAGER can read products but NOT vendors — guard the vendor call
+    const vendorCall = canApi.readVendors(user)
+      ? vendorsApi.getAll()
+      : Promise.resolve(null);
+    Promise.all([productsApi.getAll(), vendorCall])
       .then(([pRes, vRes]) => {
         const pData = pRes.data?.data ?? pRes.data;
-        const vData = vRes.data?.data ?? vRes.data;
+        const vData = vRes
+          ? (vRes as { data: { data?: unknown } }).data?.data ?? (vRes as { data: unknown }).data
+          : [];
         setProducts(Array.isArray(pData) ? pData : []);
         setVendors(Array.isArray(vData) ? vData : []);
       })
       .catch(() => setError("Failed to load products"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (status !== "authenticated") return;
     fetchProducts();
-  }, [status, fetchProducts]);
+  }, [status, user, fetchProducts]);
 
   const openCreate = () => {
     setEditingProduct(null);
@@ -140,7 +157,9 @@ export default function ProductsPage() {
       fetchProducts();
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };
-      setFormError(axiosErr.response?.data?.message ?? "Failed to save product");
+      setFormError(
+        axiosErr.response?.data?.message ?? "Failed to save product"
+      );
     } finally {
       setFormLoading(false);
     }
@@ -149,12 +168,17 @@ export default function ProductsPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleteLoading(true);
+    setDeleteError(null);
     try {
       await productsApi.delete(deleteTarget.id);
       setDeleteTarget(null);
       fetchProducts();
-    } catch {
-      setError("Failed to delete product");
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      const msg =
+        axiosErr.response?.data?.message ??
+        "Failed to delete. This product may be referenced by existing orders or a BOM.";
+      setDeleteError(msg);
     } finally {
       setDeleteLoading(false);
     }
@@ -165,6 +189,11 @@ export default function ProductsPage() {
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.productCode?.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Reset page on search
+  useEffect(() => { setPage(0); }, [search]);
+
+  const pageSlice = filtered.slice(page * pageSize, (page + 1) * pageSize);
 
   if (checking) return <PageSpinner />;
   if (!allowed) return <AccessDenied />;
@@ -235,58 +264,34 @@ export default function ProductsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                    Product
-                  </th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                    Type
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                    Sales Price
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                    Cost Price
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                    On Hand
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                    Reserved
-                  </th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                    Free to Use
-                  </th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                    Procurement
-                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Product</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Type</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Sales Price</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Cost Price</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">On Hand</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Reserved</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Free to Use</th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Procurement</th>
                   {canEdit && (
-                    <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">
-                      Actions
-                    </th>
+                    <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Actions</th>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((p) => {
+                {pageSlice.map((p) => {
                   const freeToUse = (p.onHandQty ?? 0) - (p.reservedQty ?? 0);
                   return (
-                    <tr
-                      key={p.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
+                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <div>
                           <p className="font-medium text-gray-900">{p.name}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {p.productCode}
-                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">{p.productCode}</p>
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            PRODUCT_TYPE_BADGE[p.productType] ??
-                            "bg-gray-100 text-gray-700"
+                            PRODUCT_TYPE_BADGE[p.productType] ?? "bg-gray-100 text-gray-700"
                           }`}
                         >
                           {PRODUCT_TYPE_LABEL[p.productType] ?? p.productType}
@@ -336,12 +341,14 @@ export default function ProductsPage() {
                             <button
                               onClick={() => openEdit(p)}
                               className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                              title="Edit"
                             >
                               <Pencil size={13} />
                             </button>
                             <button
-                              onClick={() => setDeleteTarget(p)}
+                              onClick={() => { setDeleteTarget(p); setDeleteError(null); }}
                               className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                              title="Delete"
                             >
                               <Trash2 size={13} />
                             </button>
@@ -354,6 +361,15 @@ export default function ProductsPage() {
               </tbody>
             </table>
           </div>
+          <div className="px-4 pb-3">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+            />
+          </div>
         </div>
       )}
 
@@ -365,9 +381,7 @@ export default function ProductsPage() {
         size="lg"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          {formError && (
-            <Alert variant="error">{formError}</Alert>
-          )}
+          {formError && <Alert variant="error">{formError}</Alert>}
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <Input
@@ -399,35 +413,24 @@ export default function ProductsPage() {
               }
             />
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-gray-700">
-                Product Type
-              </label>
+              <label className="text-sm font-medium text-gray-700">Product Type</label>
               <select
                 value={form.productType}
                 onChange={(e) =>
-                  setForm({
-                    ...form,
-                    productType: e.target.value as ProductType,
-                  })
+                  setForm({ ...form, productType: e.target.value as ProductType })
                 }
                 className="rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
               >
                 {PRODUCT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
+                  <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-gray-700">
-                Description
-              </label>
+              <label className="text-sm font-medium text-gray-700">Description</label>
               <input
                 value={form.description ?? ""}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
                 placeholder="Optional description"
                 className="rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
               />
@@ -456,33 +459,23 @@ export default function ProductsPage() {
           {form.procureOnDemand && (
             <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-indigo-200">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-gray-700">
-                  Procurement Type *
-                </label>
+                <label className="text-sm font-medium text-gray-700">Procurement Type *</label>
                 <select
                   value={form.procurementType ?? ""}
                   onChange={(e) =>
-                    setForm({
-                      ...form,
-                      procurementType: e.target.value as ProcurementType,
-                    })
+                    setForm({ ...form, procurementType: e.target.value as ProcurementType })
                   }
                   className="rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                 >
                   <option value="">Select type…</option>
                   {PROCUREMENT_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
+                    <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
               </div>
-
               {form.procurementType === "PURCHASE" && (
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-medium text-gray-700">
-                    Vendor
-                  </label>
+                  <label className="text-sm font-medium text-gray-700">Vendor</label>
                   <select
                     value={form.vendorId ?? ""}
                     onChange={(e) =>
@@ -492,9 +485,7 @@ export default function ProductsPage() {
                   >
                     <option value="">Select vendor…</option>
                     {vendors.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.name}
-                      </option>
+                      <option key={v.id} value={v.id}>{v.name}</option>
                     ))}
                   </select>
                 </div>
@@ -519,15 +510,44 @@ export default function ProductsPage() {
       </Modal>
 
       {/* Delete Confirm */}
-      <ConfirmDialog
+      <Modal
         open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
+        onClose={() => { setDeleteTarget(null); setDeleteError(null); }}
         title="Delete Product"
-        message={`Are you sure you want to delete "${deleteTarget?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
-        loading={deleteLoading}
-      />
+        size="sm"
+      >
+        <div className="flex flex-col gap-4">
+          {deleteError ? (
+            <Alert variant="error">{deleteError}</Alert>
+          ) : (
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">&ldquo;{deleteTarget?.name}&rdquo;</span>?
+              This cannot be undone. Products with existing orders or BOMs cannot be deleted.
+            </p>
+          )}
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => { setDeleteTarget(null); setDeleteError(null); }}
+              disabled={deleteLoading}
+            >
+              {deleteError ? "Close" : "Cancel"}
+            </Button>
+            {!deleteError && (
+              <Button
+                variant="danger"
+                size="sm"
+                loading={deleteLoading}
+                onClick={handleDelete}
+              >
+                Delete
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

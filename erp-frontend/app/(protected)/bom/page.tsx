@@ -16,6 +16,7 @@ import { isAdmin } from "@/lib/utils/roles";
 import { canApi } from "@/lib/utils/accessibleApis";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 import { AccessDenied } from "@/components/ui/AccessDenied";
+import { Pagination } from "@/components/ui/Pagination";
 
 export default function BomPage() {
   const { checking, allowed } = useRouteGuard();
@@ -30,6 +31,8 @@ export default function BomPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(9);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState<CreateBOMRequest>({
@@ -115,6 +118,9 @@ export default function BomPage() {
       b.bomCode?.toLowerCase().includes(search.toLowerCase())
   );
 
+  useEffect(() => { setPage(0); }, [search]);
+  const pageSlice = filtered.slice(page * pageSize, (page + 1) * pageSize);
+
   // Only finished goods can be a BOM target
   const finishedGoods = products.filter((p) => p.productType === "FINISHED_GOOD");
 
@@ -144,41 +150,52 @@ export default function BomPage() {
           description={search ? "Try a different search term" : "Create a Bill of Materials to enable manufacturing"}
           action={canEdit && !search ? <Button size="sm" onClick={openCreate}><Plus size={14} /> New BOM</Button> : undefined} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((b) => (
-            <div key={b.id} className="bg-white border border-gray-200 rounded-xl p-5 hover:border-indigo-200 hover:shadow-sm transition-all">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{b.finishedProductName}</h3>
-                  <p className="text-xs text-gray-400 mt-0.5 font-mono">{b.bomCode}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => setViewBom(b)} className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="View BOM"><Eye size={13} /></button>
-                  {canEdit && <button onClick={() => setDeleteTarget(b)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Delete BOM"><Trash2 size={13} /></button>}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                <span className="bg-gray-100 px-2 py-0.5 rounded">
-                  Produces: <span className="font-semibold text-gray-700">{b.quantityProduced}</span> units
-                </span>
-                <span className="bg-gray-100 px-2 py-0.5 rounded">
-                  <span className="font-semibold text-gray-700">{b.components?.length ?? 0}</span> components
-                </span>
-              </div>
-              <div className="space-y-1">
-                {b.components?.slice(0, 3).map((c, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-xs text-gray-600">
-                    <span className="truncate">{c.componentProductName}</span>
-                    <span className="font-medium text-gray-800 shrink-0 ml-2">× {c.requiredQuantity}</span>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {pageSlice.map((b) => (
+              <div key={b.id} className="bg-white border border-gray-200 rounded-xl p-5 hover:border-indigo-200 hover:shadow-sm transition-all">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{b.finishedProductName}</h3>
+                    <p className="text-xs text-gray-400 mt-0.5 font-mono">{b.bomCode}</p>
                   </div>
-                ))}
-                {(b.components?.length ?? 0) > 3 && (
-                  <p className="text-xs text-gray-400">+{(b.components?.length ?? 0) - 3} more…</p>
-                )}
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setViewBom(b)} className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="View BOM"><Eye size={13} /></button>
+                    {canEdit && <button onClick={() => setDeleteTarget(b)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Delete BOM"><Trash2 size={13} /></button>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                  <span className="bg-gray-100 px-2 py-0.5 rounded">
+                    Produces: <span className="font-semibold text-gray-700">{b.quantityProduced}</span> units
+                  </span>
+                  <span className="bg-gray-100 px-2 py-0.5 rounded">
+                    <span className="font-semibold text-gray-700">{b.components?.length ?? 0}</span> components
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {b.components?.slice(0, 3).map((c, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-xs text-gray-600">
+                      <span className="truncate">{c.componentProductName}</span>
+                      <span className="font-medium text-gray-800 shrink-0 ml-2">× {c.requiredQuantity}</span>
+                    </div>
+                  ))}
+                  {(b.components?.length ?? 0) > 3 && (
+                    <p className="text-xs text-gray-400">+{(b.components?.length ?? 0) - 3} more…</p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPageChange={setPage}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+            pageSizeOptions={[9, 18, 36]}
+            className="mt-4"
+          />
+        </>
       )}
 
       {/* Create Modal */}

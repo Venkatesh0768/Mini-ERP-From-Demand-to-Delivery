@@ -1,7 +1,17 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Users, Plus, Pencil, Trash2, Search, X, Phone, Mail, MapPin } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  X,
+  Phone,
+  Mail,
+  MapPin,
+} from "lucide-react";
 import { customersApi } from "@/lib/api/erp.api";
 import type { Customer, CreateCustomerRequest } from "@/types/erp.types";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -12,6 +22,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageSpinner } from "@/components/ui/Spinner";
 import { Alert } from "@/components/ui/Alert";
 import { Input } from "@/components/ui/Input";
+import { Pagination } from "@/components/ui/Pagination";
 import { useAuth } from "@/context/AuthContext";
 import { isAdmin } from "@/lib/utils/roles";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
@@ -36,6 +47,8 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
@@ -72,7 +85,12 @@ export default function CustomersPage() {
 
   const openEdit = (c: Customer) => {
     setEditing(c);
-    setForm({ name: c.name, email: c.email ?? "", phone: c.phone, address: c.address ?? "" });
+    setForm({
+      name: c.name,
+      email: c.email ?? "",
+      phone: c.phone,
+      address: c.address ?? "",
+    });
     setFormError(null);
     setFormOpen(true);
   };
@@ -122,6 +140,10 @@ export default function CustomersPage() {
       c.customerCode?.toLowerCase().includes(search.toLowerCase())
   );
 
+  useEffect(() => { setPage(0); }, [search]);
+
+  const pageSlice = filtered.slice(page * pageSize, (page + 1) * pageSize);
+
   if (checking) return <PageSpinner />;
   if (!allowed) return <AccessDenied />;
   if (loading) return <PageSpinner />;
@@ -151,7 +173,10 @@ export default function CustomersPage() {
           className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-8 py-2 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20"
         />
         {search && (
-          <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
             <X size={13} />
           </button>
         )}
@@ -162,7 +187,13 @@ export default function CustomersPage() {
           icon={Users}
           title="No customers found"
           description={search ? "Try a different search term" : "Add your first customer"}
-          action={canEdit && !search ? <Button size="sm" onClick={openCreate}><Plus size={14} /> New Customer</Button> : undefined}
+          action={
+            canEdit && !search ? (
+              <Button size="sm" onClick={openCreate}>
+                <Plus size={14} /> New Customer
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -173,11 +204,13 @@ export default function CustomersPage() {
                   <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Customer</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Contact</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Address</th>
-                  {canEdit && <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Actions</th>}
+                  {canEdit && (
+                    <th className="text-right px-4 py-3 font-medium text-gray-500 text-xs uppercase tracking-wide">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((c) => (
+                {pageSlice.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900">{c.name}</p>
@@ -208,10 +241,16 @@ export default function CustomersPage() {
                     {canEdit && (
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => openEdit(c)} className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                          <button
+                            onClick={() => openEdit(c)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                          >
                             <Pencil size={13} />
                           </button>
-                          <button onClick={() => setDeleteTarget(c)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                          <button
+                            onClick={() => setDeleteTarget(c)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          >
                             <Trash2 size={13} />
                           </button>
                         </div>
@@ -222,15 +261,47 @@ export default function CustomersPage() {
               </tbody>
             </table>
           </div>
+          <div className="px-4 pb-3">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+            />
+          </div>
         </div>
       )}
 
-      <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editing ? "Edit Customer" : "New Customer"} size="md">
+      <Modal
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        title={editing ? "Edit Customer" : "New Customer"}
+        size="md"
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && <Alert variant="error">{formError}</Alert>}
-          <Input label="Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Customer name" required />
-          <Input label="Email" type="email" value={form.email ?? ""} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@example.com" />
-          <Input label="Phone *" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 XXXXXXXXXX" required />
+          <Input
+            label="Name *"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="Customer name"
+            required
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={form.email ?? ""}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            placeholder="email@example.com"
+          />
+          <Input
+            label="Phone *"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            placeholder="+91 XXXXXXXXXX"
+            required
+          />
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-gray-700">Address</label>
             <textarea
@@ -242,8 +313,17 @@ export default function CustomersPage() {
             />
           </div>
           <div className="flex justify-end gap-2 pt-1">
-            <Button type="button" variant="secondary" size="sm" onClick={() => setFormOpen(false)}>Cancel</Button>
-            <Button type="submit" size="sm" loading={formLoading}>{editing ? "Update" : "Create Customer"}</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => setFormOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" loading={formLoading}>
+              {editing ? "Update" : "Create Customer"}
+            </Button>
           </div>
         </form>
       </Modal>

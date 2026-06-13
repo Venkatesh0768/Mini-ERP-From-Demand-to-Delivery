@@ -23,6 +23,7 @@ import type {
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageSpinner } from "@/components/ui/Spinner";
@@ -62,6 +63,8 @@ export default function SalesPage() {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   // Create modal
   const [createOpen, setCreateOpen] = useState(false);
@@ -171,6 +174,11 @@ export default function SalesPage() {
     return matchTab && matchSearch;
   });
 
+  // Reset page whenever filters change
+  useEffect(() => { setPage(0); }, [search, tab]);
+
+  const pageSlice = filtered.slice(page * pageSize, (page + 1) * pageSize);
+
   const getTotal = (o: SalesOrder) =>
     o.items?.reduce((sum, i) => sum + (i.totalAmount ?? 0), 0) ?? 0;
 
@@ -250,7 +258,7 @@ export default function SalesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((o) => (
+                {pageSlice.map((o) => (
                   <tr key={o.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <span className="font-mono text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
@@ -301,6 +309,15 @@ export default function SalesPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="px-4 pb-3">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+            />
           </div>
         </div>
       )}

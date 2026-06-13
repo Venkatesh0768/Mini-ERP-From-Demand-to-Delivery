@@ -38,8 +38,7 @@ public class ManufacturingServiceImpl implements ManufacturingService {
 
     @Override
     public ManufacturingOrderResponse
-    createManufacturingOrder(
-            CreateManufacturingOrderRequest request) {
+    createManufacturingOrder(CreateManufacturingOrderRequest request) {
 
         Product finishedProduct =
                 productRepository.findById(
@@ -98,8 +97,7 @@ public class ManufacturingServiceImpl implements ManufacturingService {
 
     @Override
     @Transactional(readOnly = true)
-    public ManufacturingOrderResponse
-    getManufacturingOrder(UUID id) {
+    public ManufacturingOrderResponse getManufacturingOrder(UUID id) {
 
         ManufacturingOrder order =
                 manufacturingOrderRepository.findById(id)
@@ -112,8 +110,7 @@ public class ManufacturingServiceImpl implements ManufacturingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ManufacturingOrderResponse>
-    getAllManufacturingOrders() {
+    public List<ManufacturingOrderResponse> getAllManufacturingOrders() {
 
         return manufacturingOrderRepository.findAll()
                 .stream()
@@ -122,8 +119,7 @@ public class ManufacturingServiceImpl implements ManufacturingService {
     }
 
     @Override
-    public ManufacturingOrderResponse
-    confirmOrder(UUID orderId) {
+    public ManufacturingOrderResponse confirmOrder(UUID orderId) {
 
         ManufacturingOrder order =
                 manufacturingOrderRepository.findById(orderId)
@@ -139,8 +135,7 @@ public class ManufacturingServiceImpl implements ManufacturingService {
     }
 
     @Override
-    public ManufacturingOrderResponse
-    startProduction(UUID orderId) {
+    public ManufacturingOrderResponse startProduction(UUID orderId) {
 
         ManufacturingOrder order =
                 manufacturingOrderRepository.findById(orderId)
@@ -156,8 +151,7 @@ public class ManufacturingServiceImpl implements ManufacturingService {
     }
 
     @Override
-    public ManufacturingOrderResponse
-    completeOrder(UUID orderId) {
+    public ManufacturingOrderResponse completeOrder(UUID orderId) {
 
         ManufacturingOrder order =
                 manufacturingOrderRepository.findById(orderId)

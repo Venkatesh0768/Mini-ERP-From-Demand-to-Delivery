@@ -21,8 +21,7 @@ public class InventoryServiceImpl
             inventoryLedgerRepository;
 
     @Override
-    public List<InventoryLedgerResponse>
-    getProductHistory(UUID productId) {
+    public List<InventoryLedgerResponse> getProductHistory(UUID productId) {
 
         return inventoryLedgerRepository
                 .findByProductIdOrderByCreatedAtDesc(productId)
