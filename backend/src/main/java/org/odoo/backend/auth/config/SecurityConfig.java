@@ -101,7 +101,20 @@ public class SecurityConfig {
                                 "BUSINESS_OWNER",
                                 "INVENTORY_MANAGER"
                         )
+                        .requestMatchers("/boms/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "BUSINESS_OWNER",
+                                "MANUFACTURING_USER"
+                        )
                         .requestMatchers("/customers/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "BUSINESS_OWNER",
+                                "SALES_USER"
+                        )
+                        .requestMatchers(
+                                "/sales-orders/**")
                         .hasAnyRole(
                                 "ADMIN",
                                 "BUSINESS_OWNER",
