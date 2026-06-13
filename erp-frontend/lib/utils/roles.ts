@@ -15,6 +15,57 @@ export function isAdmin(user: User | null): boolean {
   return hasRole(user, "ROLE_ADMIN");
 }
 
+// ─── Route Access Map ─────────────────────────────────────────────────────────
+// Mirrors backend SecurityConfig exactly.
+// Key = route prefix, value = roles that may access it.
+// ROLE_ADMIN always has full access — it's added implicitly in canAccessRoute().
+
+const ROUTE_ROLES: Record<string, RoleType[]> = {
+  "/dashboard":     ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER"],
+  "/audit-logs":    ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER"],
+  "/admin":         ["ROLE_ADMIN"],
+  "/products":      ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_INVENTORY_MANAGER"],
+  "/inventory":     ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_INVENTORY_MANAGER"],
+  "/customers":     ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_SALES_USER"],
+  "/sales":         ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_SALES_USER"],
+  "/vendors":       ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_PURCHASE_USER"],
+  "/purchases":     ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_PURCHASE_USER"],
+  "/bom":           ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_MANUFACTURING_USER"],
+  "/manufacturing": ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_MANUFACTURING_USER"],
+  // /profile is accessible to all authenticated users
+  "/profile":       ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_SALES_USER",
+                     "ROLE_PURCHASE_USER", "ROLE_MANUFACTURING_USER",
+                     "ROLE_INVENTORY_MANAGER", "ROLE_USER"],
+};
+
+/**
+ * Returns true if the given user is allowed to access a route.
+ * Matches by prefix — e.g. "/products" covers "/products/123".
+ */
+export function canAccessRoute(user: User | null, route: string): boolean {
+  if (!user) return false;
+  // Find the most specific matching prefix
+  const match = Object.keys(ROUTE_ROLES)
+    .filter((prefix) => route === prefix || route.startsWith(prefix + "/"))
+    .sort((a, b) => b.length - a.length)[0]; // longest prefix wins
+  if (!match) return true; // unknown route → let backend enforce
+  return ROUTE_ROLES[match].some((r) => user.roles.includes(r));
+}
+
+/**
+ * Returns the list of routes the user can access.
+ * Used by the Sidebar to filter nav items.
+ */
+export function accessibleRoutes(user: User | null): Set<string> {
+  const result = new Set<string>();
+  for (const route of Object.keys(ROUTE_ROLES)) {
+    if (canAccessRoute(user, route)) result.add(route);
+  }
+  return result;
+}
+
+// ─── Role display helpers ─────────────────────────────────────────────────────
+
 /**
  * Get a human-readable display name for a role.
  */

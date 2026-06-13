@@ -85,7 +85,6 @@ public class DataInitializer implements CommandLineRunner {
                 .password(passwordEncoder.encode(adminPassword))
                 .firstName(adminFirstName)
                 .lastName(adminLastName)
-                .position("SuperAdmin")
                 .emailVerified(true)   // Admin is pre-verified
                 .enabled(true)
                 .provider("local")

@@ -36,8 +36,6 @@ public class User {
     private String lastName;
 
 
-    private String position;
-
     @Column(nullable = false)
     private boolean emailVerified = false;
 

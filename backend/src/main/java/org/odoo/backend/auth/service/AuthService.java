@@ -69,6 +69,7 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
+
                 .emailVerified(false)
                 .enabled(false)
                 .provider("local")

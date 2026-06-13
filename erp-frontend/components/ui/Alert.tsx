@@ -4,8 +4,10 @@ type Variant = "success" | "error" | "warning" | "info";
 
 interface AlertProps {
   variant?: Variant;
+  /** Legacy string prop — use children for JSX content */
   message?: string | null;
   className?: string;
+  children?: React.ReactNode;
 }
 
 const config: Record<Variant, { icon: React.ReactNode; cls: string }> = {
@@ -27,8 +29,9 @@ const config: Record<Variant, { icon: React.ReactNode; cls: string }> = {
   },
 };
 
-export function Alert({ variant = "info", message, className = "" }: AlertProps) {
-  if (!message) return null;
+export function Alert({ variant = "info", message, children, className = "" }: AlertProps) {
+  const content = children ?? message;
+  if (!content) return null;
   const { icon, cls } = config[variant];
   return (
     <div
@@ -36,7 +39,7 @@ export function Alert({ variant = "info", message, className = "" }: AlertProps)
       className={`flex items-start gap-2.5 rounded-lg px-3.5 py-3 text-sm leading-snug ${cls} ${className}`}
     >
       {icon}
-      <span>{message}</span>
+      <span>{content}</span>
     </div>
   );
 }

@@ -33,17 +33,10 @@ export const authApi = {
   resetPassword: (data: ResetPasswordRequest) =>
     apiClient.post<ApiResponse>("/auth/reset-password", data),
 
-  /**
-   * Activate an admin-created account. The user provides the token from
-   * their invitation email and their chosen password.
-   */
+
   activateAccount: (data: ActivateAccountRequest) =>
     apiClient.post<ApiResponse>("/auth/activate", data),
 
-  /**
-   * Exchange the HttpOnly refresh token cookie for a new access token.
-   * No body needed — the browser sends the cookie automatically.
-   */
   refreshToken: () =>
     apiClient.post<AuthResponse>("/auth/refresh-token"),
 

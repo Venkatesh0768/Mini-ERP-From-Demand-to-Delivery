@@ -23,11 +23,7 @@ export function Navbar() {
   };
 
   const navLinks = user
-    ? [
-        { href: "/dashboard", label: "Dashboard" },
-        { href: "/profile", label: "Profile" },
-        ...(admin ? [{ href: "/admin", label: "Admin" }] : []),
-      ]
+    ? []
     : [];
 
   return (

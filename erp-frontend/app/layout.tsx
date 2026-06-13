@@ -3,8 +3,8 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "ERP System ",
-  description: "JWT, refresh tokens, OTP email verification, Google OAuth2, RBAC, and admin panel.",
+  title: "Shiv Furniture ERP",
+  description: "Mini ERP — From Demand to Delivery. Manage products, sales, purchases, manufacturing, and inventory.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

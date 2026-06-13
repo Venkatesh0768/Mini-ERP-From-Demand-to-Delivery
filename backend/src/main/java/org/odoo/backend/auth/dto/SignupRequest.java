@@ -28,4 +28,5 @@ public class SignupRequest {
     @NotBlank(message = "Last name is required")
     @Size(min = 2, max = 50)
     private String lastName;
+
 }

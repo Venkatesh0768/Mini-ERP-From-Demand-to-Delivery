@@ -14,12 +14,16 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  // NOTE: position field does NOT exist in the backend User entity or UserDTO.
+  // AdminCreateUserRequest accepts it but the service silently ignores it.
   emailVerified: boolean;
   enabled: boolean;
   provider: "local" | "google" | "github";
   profileImageUrl?: string | null;
   lastLoginAt?: string | null;
   createdAt: string;
+  // Backend UserDTO returns roles as Set<String> (e.g. "ROLE_ADMIN").
+  // We type it as RoleType[] — values will match if the backend strings are valid RoleType names.
   roles: RoleType[];
 }
 
@@ -59,16 +63,18 @@ export interface UpdateProfileRequest {
   profileImageUrl?: string;
 }
 
+// Backend AssignRolesRequest.roles is Set<String> — send as string[]
 export interface AssignRolesRequest {
-  roles: RoleType[];
+  roles: string[];
 }
 
+// Backend AdminCreateUserRequest.roles is Set<String> — send as string[]
+// position field exists in the DTO but is silently ignored by the service (no column in User entity)
 export interface AdminCreateUserRequest {
   email: string;
   firstName: string;
   lastName: string;
-  position?: string;
-  roles: RoleType[];
+  roles: string[];
 }
 
 export interface ActivateAccountRequest {

@@ -60,7 +60,6 @@ public class AdminUserService {
                 .email(request.getEmail().trim().toLowerCase())
                 .firstName(request.getFirstName().trim())
                 .lastName(request.getLastName().trim())
-                .position(request.getPosition() != null ? request.getPosition().trim() : null)
                 .emailVerified(false)
                 .enabled(false)
                 .provider("local")

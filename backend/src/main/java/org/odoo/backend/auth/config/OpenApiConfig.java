@@ -25,17 +25,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Starter Template API")
                         .description("""
-                                Production-ready Spring Boot authentication backend.
                                 
-                                **Authentication methods:**
-                                - Email + password (JWT)
-                                - Google OAuth2 social login
-                                - GitHub OAuth2 social login
-                                
-                                **Role hierarchy:**
-                                - `ROLE_USER`   — standard user
-                                - `ROLE_VENDOR` — vendor + all USER permissions
-                                - `ROLE_ADMIN`  — full access
                                 """)
                         .version("1.0.0")
                         .contact(new Contact()
