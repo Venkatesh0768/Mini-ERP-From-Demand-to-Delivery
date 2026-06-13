@@ -8,7 +8,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-@Data
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class CreateBOMRequest {
 
     private UUID finishedProductId;

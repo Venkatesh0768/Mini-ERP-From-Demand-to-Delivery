@@ -8,7 +8,11 @@ import org.odoo.backend.sales.model.SalesOrderStatus;
 import java.util.List;
 import java.util.UUID;
 
-@Data
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class SalesOrderResponse {
 

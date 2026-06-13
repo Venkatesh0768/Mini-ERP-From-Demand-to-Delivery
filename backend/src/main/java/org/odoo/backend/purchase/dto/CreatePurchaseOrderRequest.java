@@ -7,7 +7,12 @@ import lombok.Data;
 import java.util.List;
 import java.util.UUID;
 
-@Data
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class CreatePurchaseOrderRequest {
 
     private UUID vendorId;

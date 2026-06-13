@@ -6,8 +6,13 @@ import org.odoo.backend.inventory.model.AdjustmentType;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class CreateStockAdjustmentRequest {
 
     private UUID productId;

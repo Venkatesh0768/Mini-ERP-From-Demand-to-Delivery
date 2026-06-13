@@ -1,15 +1,17 @@
 package org.odoo.backend.audit.dto;
 
 
-import lombok.Builder;
-import lombok.Data;
 import org.odoo.backend.audit.model.AuditAction;
 import org.odoo.backend.audit.model.AuditEntityType;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class AuditLogResponse {
 

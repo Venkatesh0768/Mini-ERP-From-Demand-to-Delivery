@@ -3,7 +3,12 @@ package org.odoo.backend.vendor.dto;
 import jakarta.validation.constraints.Email;
 import lombok.Data;
 
-@Data
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class UpdateVendorRequest {
 
     private String name;

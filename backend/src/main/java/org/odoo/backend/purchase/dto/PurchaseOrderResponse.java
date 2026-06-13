@@ -7,7 +7,11 @@ import org.odoo.backend.purchase.model.PurchaseOrderStatus;
 import java.util.List;
 import java.util.UUID;
 
-@Data
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class PurchaseOrderResponse {
 

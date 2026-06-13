@@ -5,7 +5,12 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Data
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class SalesOrderItemRequest {
 
     private UUID productId;

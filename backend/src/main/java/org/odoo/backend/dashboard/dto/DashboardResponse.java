@@ -5,7 +5,11 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
-@Data
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class DashboardResponse {
 

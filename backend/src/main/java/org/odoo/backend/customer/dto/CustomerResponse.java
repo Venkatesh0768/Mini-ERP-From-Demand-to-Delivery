@@ -6,7 +6,11 @@ import lombok.Data;
 
 import java.util.UUID;
 
-@Data
+import lombok.*;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class CustomerResponse {
 
