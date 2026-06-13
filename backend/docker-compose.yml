@@ -9,9 +9,9 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - odoo_db:/var/lib/mysql
+      - erp_db:/var/lib/mysql
     networks:
-      - odoo-network
+      - erp-network
     restart: always
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -20,8 +20,8 @@ services:
       retries: 5
 
   odoo_backend:
-    image: odoobackend:latest
-    container_name: odoo_backend
+    image: erp_backend:latest
+    container_name: erp_backend
     env_file:
       - .env
     ports:
@@ -30,12 +30,12 @@ services:
       mysql:
         condition: service_healthy
     networks:
-      - odoo-network
+      - erp-network
     restart: always
 
 volumes:
-  odoo_db:
+  erp_db:
 
 networks:
-  odoo-network:
+  erp-network:
     driver: bridge
