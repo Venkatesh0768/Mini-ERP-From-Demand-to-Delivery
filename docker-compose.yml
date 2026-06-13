@@ -93,7 +93,7 @@ services:
 
   erp_frontend:
     build:
-      context: ./frontend
+      context: ./erp-frontend
       dockerfile: Dockerfile
       args:
         # NEXT_PUBLIC_* are baked at build time — must be the URL the

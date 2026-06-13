@@ -131,7 +131,7 @@ export default function ProductsPage() {
       salesPrice: p.salesPrice,
       costPrice: p.costPrice,
       productType: p.productType,
-      procureOnDemand: p.procureOnDemand,
+      procureOnDemand: p.procureOnDemand ?? false,
       procurementType: p.procurementType,
       vendorId: p.vendor?.id,
     });

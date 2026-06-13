@@ -165,6 +165,7 @@ public class ProductServiceImpl implements ProductService {
                 .productType(product.getProductType())
                 .procurementType(
                         product.getProcurementType())
+                .procureOnDemand(product.isProcureOnDemand())
                 .vendorId(
                         product.getVendor() != null
                                 ? product.getVendor().getId()

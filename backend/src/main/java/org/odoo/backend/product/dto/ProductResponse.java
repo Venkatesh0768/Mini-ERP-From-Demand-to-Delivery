@@ -36,5 +36,7 @@ public class ProductResponse {
 
     private ProcurementType procurementType;
 
+    private boolean procureOnDemand;
+
     private UUID vendorId;
 }
