@@ -63,19 +63,6 @@ public class UserController {
         }
     }
 
-    @Operation(summary = "Get user's avatar image")
-    @GetMapping("/{id}/avatar")
-    @PreAuthorize("permitAll()")
-    public ResponseEntity<byte[]> getAvatar(@PathVariable UUID id) {
-        User user = authService.getUserEntityById(id);
-        if (user.getProfileImage() == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(user.getProfileImageType() != null ? user.getProfileImageType() : MediaType.IMAGE_JPEG_VALUE))
-                .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
-                .body(user.getProfileImage());
-    }
 
     @Operation(summary = "Change password — revokes all other active sessions")
     @PostMapping("/me/change-password")

@@ -58,9 +58,14 @@ export function Navbar() {
                   className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-gray-100 transition-colors"
                   aria-label="Account menu"
                 >
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">
-                    {initials(user)}
-                  </div>
+                  {user.profileImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.profileImageUrl} alt="Profile" className="h-7 w-7 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold">
+                      {initials(user)}
+                    </div>
+                  )}
                   <span className="hidden sm:block text-sm font-medium text-gray-700 max-w-[120px] truncate">
                     {displayName(user)}
                   </span>
@@ -116,9 +121,14 @@ export function Navbar() {
         <div className="md:hidden border-t border-gray-200 bg-white px-4 pb-4 pt-2">
           {user && (
             <div className="flex items-center gap-3 py-3 mb-2 border-b border-gray-100">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold shrink-0">
-                {initials(user)}
-              </div>
+              {user.profileImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.profileImageUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold shrink-0">
+                  {initials(user)}
+                </div>
+              )}
               <div className="min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{displayName(user)}</p>
                 <p className="text-xs text-gray-500 truncate">{user.email}</p>

@@ -293,12 +293,22 @@ public class AuthService {
         return new ApiResponse(true, "Profile updated successfully", convertToUserDTO(user));
     }
 
+    private final com.cloudinary.Cloudinary cloudinary;
+
     @Transactional
     public ApiResponse updateAvatar(String email, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
-        user.setProfileImage(file.getBytes());
-        user.setProfileImageType(file.getContentType());
+        
+        @SuppressWarnings("rawtypes")
+        java.util.Map uploadResult = cloudinary.uploader().upload(file.getBytes(), com.cloudinary.utils.ObjectUtils.asMap(
+                "folder", "mini_erp/avatars",
+                "transformation", new com.cloudinary.Transformation<>().width(500).height(500).crop("fill").gravity("face")
+        ));
+        
+        String secureUrl = (String) uploadResult.get("secure_url");
+        user.setProfileImageUrl(secureUrl);
         userRepository.save(user);
+        
         return new ApiResponse(true, "Avatar uploaded successfully", convertToUserDTO(user));
     }
 
@@ -350,10 +360,6 @@ public class AuthService {
 
     public UserDTO convertToUserDTO(User user) {
         String avatarUrl = user.getProfileImageUrl();
-        if (user.getProfileImage() != null) {
-            // Serve the image via the new local endpoint
-            avatarUrl = appBaseUrl + "/api/v1/user/" + user.getId() + "/avatar";
-        }
         
         return UserDTO.builder()
                 .id(user.getId())
