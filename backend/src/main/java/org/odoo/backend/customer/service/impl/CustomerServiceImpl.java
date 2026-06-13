@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
 
     @Override
+    @CacheEvict(value = "customers", allEntries = true)
     public CustomerResponse createCustomer(CreateCustomerRequest request) {
 
         Customer customer = Customer.builder()
@@ -39,6 +42,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "customers", key = "#customerId")
     public CustomerResponse getCustomer(UUID customerId) {
 
         Customer customer =
@@ -52,6 +56,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "customers")
     public List<CustomerResponse> getAllCustomers() {
 
         return customerRepository.findAll()
@@ -61,6 +66,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @CacheEvict(value = "customers", allEntries = true)
     public CustomerResponse updateCustomer(
             UUID customerId,
             UpdateCustomerRequest request) {
@@ -81,6 +87,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @CacheEvict(value = "customers", allEntries = true)
     public void deleteCustomer(UUID customerId) {
 
         Customer customer =

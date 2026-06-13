@@ -69,8 +69,3 @@ server:
   servlet:
     context-path: /api/v1
   port: 8081
-
-cloudinary:
-  cloud-name: test-cloud
-  api-key: test-api-key
-  api-secret: test-api-secret

@@ -99,7 +99,10 @@ public class SecurityConfig {
                         .hasAnyRole(
                                 "ADMIN",
                                 "BUSINESS_OWNER",
-                                "INVENTORY_MANAGER"
+                                "INVENTORY_MANAGER",
+                                "SALES_USER",
+                                "PURCHASE_USER",
+                                "MANUFACTURING_USER"
                         )
                         .requestMatchers("/boms/**")
                         .hasAnyRole(

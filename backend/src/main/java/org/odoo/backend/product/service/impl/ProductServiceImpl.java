@@ -21,6 +21,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -31,6 +34,7 @@ public class ProductServiceImpl implements ProductService {
     private final AuditService auditService;
 
     @Override
+    @CacheEvict(value = "products", allEntries = true)
     public ProductResponse createProduct(CreateProductRequest request) {
 
         Vendor vendor = null;
@@ -71,6 +75,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "products", key = "#productId")
     public ProductResponse getProduct(UUID productId) {
 
         Product product = productRepository.findById(productId)
@@ -83,6 +88,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "products")
     public List<ProductResponse> getAllProducts() {
 
         return productRepository.findAll()
@@ -92,6 +98,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "products", allEntries = true)
     public ProductResponse updateProduct(
             UUID productId,
             UpdateProductRequest request) {
@@ -136,6 +143,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "products", allEntries = true)
     public void deleteProduct(UUID productId) {
 
         Product product = productRepository.findById(productId)

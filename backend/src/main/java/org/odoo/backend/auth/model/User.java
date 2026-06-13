@@ -55,6 +55,13 @@ public class User {
     @Column
     private String profileImageUrl;
 
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    private byte[] profileImage;
+
+    @Column
+    private String profileImageType;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

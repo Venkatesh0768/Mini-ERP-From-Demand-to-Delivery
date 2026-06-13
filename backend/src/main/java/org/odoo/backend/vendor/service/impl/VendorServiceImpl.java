@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class VendorServiceImpl implements VendorService {
     private final VendorRepository vendorRepository;
 
     @Override
+    @CacheEvict(value = "vendors", allEntries = true)
     public VendorResponse createVendor(CreateVendorRequest request) {
 
         Vendor vendor = Vendor.builder()
@@ -39,6 +42,7 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "vendors", key = "#vendorId")
     public VendorResponse getVendor(UUID vendorId) {
 
         Vendor vendor = vendorRepository.findById(vendorId)
@@ -51,6 +55,7 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "vendors")
     public List<VendorResponse> getAllVendors() {
 
         return vendorRepository.findAll()
@@ -60,6 +65,7 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
+    @CacheEvict(value = "vendors", allEntries = true)
     public VendorResponse updateVendor(
             UUID vendorId,
             UpdateVendorRequest request) {
@@ -79,6 +85,7 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
+    @CacheEvict(value = "vendors", allEntries = true)
     public void deleteVendor(UUID vendorId) {
 
         Vendor vendor = vendorRepository.findById(vendorId)

@@ -18,6 +18,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import org.springframework.http.CacheControl;
+import java.util.concurrent.TimeUnit;
+import java.util.UUID;
+import org.odoo.backend.auth.model.User;
 
 @Tag(name = "User", description = "Authenticated user self-service operations")
 @RestController
@@ -37,12 +43,38 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse(true, "Profile retrieved", dto));
     }
 
-    @Operation(summary = "Update current user's profile (name, avatar)")
+    @Operation(summary = "Update current user's profile (name, avatar URL)")
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse> updateProfile(
             Authentication authentication,
             @RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(authService.updateProfile(authentication.getName(), request));
+    }
+
+    @Operation(summary = "Upload current user's avatar image")
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse> uploadAvatar(
+            Authentication authentication,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            return ResponseEntity.ok(authService.updateAvatar(authentication.getName(), file));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Failed to upload avatar: " + e.getMessage(), null));
+        }
+    }
+
+    @Operation(summary = "Get user's avatar image")
+    @GetMapping("/{id}/avatar")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<byte[]> getAvatar(@PathVariable UUID id) {
+        User user = authService.getUserEntityById(id);
+        if (user.getProfileImage() == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(user.getProfileImageType() != null ? user.getProfileImageType() : MediaType.IMAGE_JPEG_VALUE))
+                .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
+                .body(user.getProfileImage());
     }
 
     @Operation(summary = "Change password — revokes all other active sessions")

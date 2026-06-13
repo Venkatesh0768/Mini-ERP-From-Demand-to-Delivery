@@ -37,7 +37,7 @@ const ADMIN_OWNER_MFG: RoleType[] = ["ROLE_ADMIN", "ROLE_BUSINESS_OWNER", "ROLE_
 
 export const canApi = {
   // Products
-  readProducts:   (u: User | null) => has(u, ADMIN_OWNER_INVENTORY),
+  readProducts:   (u: User | null) => has(u, [...ADMIN_OWNER_INVENTORY, "ROLE_SALES_USER", "ROLE_PURCHASE_USER", "ROLE_MANUFACTURING_USER"]),
   writeProducts:  (u: User | null) => has(u, ADMIN_OWNER),
 
   // Customers & Sales

@@ -53,6 +53,14 @@ export const userApi = {
   updateProfile: (data: UpdateProfileRequest) =>
     apiClient.patch<ApiResponse<User>>("/user/me", data),
 
+  uploadAvatar: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiClient.post<ApiResponse<User>>("/user/me/avatar", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
   changePassword: (data: ChangePasswordRequest) =>
     apiClient.post<ApiResponse>("/user/me/change-password", data),
 

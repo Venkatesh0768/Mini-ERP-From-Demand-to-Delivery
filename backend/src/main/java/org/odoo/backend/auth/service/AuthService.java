@@ -293,6 +293,19 @@ public class AuthService {
         return new ApiResponse(true, "Profile updated successfully", convertToUserDTO(user));
     }
 
+    @Transactional
+    public ApiResponse updateAvatar(String email, org.springframework.web.multipart.MultipartFile file) throws java.io.IOException {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
+        user.setProfileImage(file.getBytes());
+        user.setProfileImageType(file.getContentType());
+        userRepository.save(user);
+        return new ApiResponse(true, "Avatar uploaded successfully", convertToUserDTO(user));
+    }
+
+    public User getUserEntityById(java.util.UUID id) {
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
 
     // ─── Admin-created user account activation ───────────────────────────────
 
@@ -332,7 +345,16 @@ public class AuthService {
         return convertToUserDTO(user);
     }
 
+    @Value("${app.base-url}")
+    private String appBaseUrl;
+
     public UserDTO convertToUserDTO(User user) {
+        String avatarUrl = user.getProfileImageUrl();
+        if (user.getProfileImage() != null) {
+            // Serve the image via the new local endpoint
+            avatarUrl = appBaseUrl + "/api/v1/user/" + user.getId() + "/avatar";
+        }
+        
         return UserDTO.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -341,7 +363,7 @@ public class AuthService {
                 .emailVerified(user.isEmailVerified())
                 .enabled(user.isEnabled())
                 .provider(user.getProvider())
-                .profileImageUrl(user.getProfileImageUrl())
+                .profileImageUrl(avatarUrl)
                 .lastLoginAt(user.getLastLoginAt())
                 .createdAt(user.getCreatedAt())
                 .roles(user.getRoles().stream()

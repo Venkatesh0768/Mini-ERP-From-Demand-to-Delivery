@@ -12,21 +12,6 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 
-// ─── Cloudinary unsigned upload ───────────────────────────────────────────────
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "";
-const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? "";
-
-async function uploadToCloudinary(file: File): Promise<string> {
-  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("upload_preset", UPLOAD_PRESET);
-  fd.append("folder", "erp_profiles");
-  const res = await fetch(url, { method: "POST", body: fd });
-  if (!res.ok) throw new Error("Cloudinary upload failed");
-  const json = await res.json();
-  return json.secure_url as string;
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ProfilePage() {
@@ -86,13 +71,8 @@ function ProfileSection({ user, refreshUser }: { user: any; refreshUser: () => P
     setAvatarLoading(true);
 
     try {
-      if (!CLOUD_NAME || !UPLOAD_PRESET) {
-        throw new Error("Cloudinary is not configured. Set NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME and NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET.");
-      }
-      const cloudUrl = await uploadToCloudinary(file);
-      setAvatarUrl(cloudUrl);
-      // Persist to backend
-      await userApi.updateProfile({ profileImageUrl: cloudUrl });
+      const response = await userApi.uploadAvatar(file);
+      setAvatarUrl(response.data.data.profileImageUrl ?? objectUrl);
       await refreshUser();
       setSuccess("Profile image updated.");
     } catch (err) {
