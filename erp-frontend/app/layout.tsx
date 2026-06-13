@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "Shiv Furniture ERP",
+  title: "ERP Management System",
   description: "Mini ERP — From Demand to Delivery. Manage products, sales, purchases, manufacturing, and inventory.",
 };
 
