@@ -9,6 +9,7 @@ import org.odoo.backend.auth.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -81,8 +82,41 @@ public class SecurityConfig {
                         ex.authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/products/**")
+                        .hasAnyRole("ADMIN","BUSINESS_OWNER")
+
+                        .requestMatchers(HttpMethod.PUT,
+                                "/products/**")
+                        .hasAnyRole("ADMIN","BUSINESS_OWNER")
+
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/products/**")
+                        .hasAnyRole("ADMIN","BUSINESS_OWNER")
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/products/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "BUSINESS_OWNER",
+                                "INVENTORY_MANAGER"
+                        )
+                        .requestMatchers("/customers/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "BUSINESS_OWNER",
+                                "SALES_USER"
+                        )
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/vendors/**")
+
+                        .hasAnyRole(
+                                "ADMIN",
+                                "BUSINESS_OWNER",
+                                "PURCHASE_USER"
+                        )
                         .anyRequest().authenticated()
+
                 )
                 // ── JWT filter ────────────────────────────────────────────────
                 .authenticationProvider(authenticationProvider())

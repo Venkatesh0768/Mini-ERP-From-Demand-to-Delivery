@@ -1,6 +1,8 @@
 package org.odoo.backend.auth.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.odoo.backend.common.exception.ProductNotFoundException;
+import org.odoo.backend.common.exception.VendorNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -94,6 +96,21 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
                 "Failed to send email. Please try again later.", request);
     }
+
+
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleProductNotFoundException(ProductNotFoundException ex, WebRequest request) {
+        log.error("Product Not Found : {}", ex.getMessage());
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "404 Not Found","The Product Not Found" , request );
+    }
+
+    @ExceptionHandler(VendorNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleVendorNotFoundException(VendorNotFoundException ex, WebRequest request) {
+        log.error("Vendor Not Found : {}", ex.getMessage());
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "404 Not Found","The Vendor Not Found" , request );
+    }
+
 
     // ─── Validation ──────────────────────────────────────────────────────────
 

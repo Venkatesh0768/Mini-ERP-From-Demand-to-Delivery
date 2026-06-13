@@ -40,7 +40,7 @@ export function Navbar() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white group-hover:bg-indigo-700 transition-colors">
               <ShieldCheck size={14} />
             </div>
-            <span className="text-sm font-bold text-gray-900 tracking-tight">AuthKit</span>
+            <span className="text-sm font-bold text-gray-900 tracking-tight">ERP System</span>
           </Link>
 
           {/* Desktop nav */}

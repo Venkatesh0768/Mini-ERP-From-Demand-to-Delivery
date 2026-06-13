@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "AuthKit — Production Auth Starter",
+  title: "ERP System ",
   description: "JWT, refresh tokens, OTP email verification, Google OAuth2, RBAC, and admin panel.",
 };
 
