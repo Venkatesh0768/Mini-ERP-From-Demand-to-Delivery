@@ -10,9 +10,9 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - blog_db:/var/lib/mysql
+      - erp_db:/var/lib/mysql
     networks:
-      - blog-network
+      - erp-network
     restart: always
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
@@ -26,7 +26,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - blog-network
+      - erp-network
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -34,15 +34,15 @@ services:
       timeout: 5s
       retries: 5
 
-  blog_backend:
+  erp_backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: blog-management-system-blog_backend:latest
-    container_name: blog_backend
+    image: erp_backend:latest
+    container_name: erp_backend
     environment:
       # Spring
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: dev
       # Database — use Docker service name, not localhost
       DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}
       DB_USERNAME: ${MYSQL_USER}
@@ -59,7 +59,7 @@ services:
       OTP_EXPIRATION: ${OTP_EXPIRATION}
       OTP_LENGTH: ${OTP_LENGTH}
       # CORS — allow both localhost and Docker internal
-      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://blog_frontend:3000
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://erp_frontend:3000
       # App URLs
       APP_FRONTEND_URL: http://localhost:3000
       APP_BASE_URL: http://localhost:5000
@@ -88,10 +88,10 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - blog-network
+      - erp-network
     restart: always
 
-  blog_frontend:
+  erp_frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -100,22 +100,22 @@ services:
         # user's BROWSER will call (not the Docker internal hostname)
         NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
         NEXT_PUBLIC_APP_NAME: StoryStack
-    image: blog-management-system-blog_frontend:latest
-    container_name: blog_frontend
+    image: erp_frontend:latest
+    container_name: erp_frontend
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
       NEXT_PUBLIC_APP_NAME: StoryStack
     ports:
       - "3000:3000"
     depends_on:
-      - blog_backend
+      - erp_backend
     restart: always
     networks:
-      - blog-network
+      - erp-network
 
 volumes:
-  blog_db:
+  erp_db:
 
 networks:
-  blog-network:
+  erp-network:
     driver: bridge
