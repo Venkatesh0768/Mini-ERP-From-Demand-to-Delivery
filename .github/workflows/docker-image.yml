@@ -60,8 +60,4 @@ jobs:
           context: ./erp-frontend
           file: ./erp-frontend/Dockerfile
           push: true
-<<<<<<< HEAD
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/mini-erp-frontend:latest
-=======
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/mini-erp-frontend:latest
->>>>>>> 24622e7 (Resolved the Docker compose file errors)
