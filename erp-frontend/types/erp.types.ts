@@ -238,7 +238,9 @@ export type AuditAction =
   | "APPROVE"
   | "CANCEL"
   | "RECEIVE"
-  | "COMPLETE";
+  | "COMPLETE"
+  | "START"
+  | "DELIVER";
 
 export type AuditEntityType =
   | "USER"

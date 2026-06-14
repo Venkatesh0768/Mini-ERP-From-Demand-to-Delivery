@@ -63,7 +63,7 @@ public class AuditServiceImpl
     public List<AuditLogResponse>
     getAllLogs() {
 
-        return auditLogRepository.findAll()
+        return auditLogRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
                 .map(this::mapToResponse)
                 .toList();

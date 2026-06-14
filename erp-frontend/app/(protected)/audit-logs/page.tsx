@@ -22,6 +22,8 @@ const ACTION_CONFIG: Record<AuditAction, { label: string; color: string }> = {
   CANCEL: { label: "Cancelled", color: "bg-amber-50 text-amber-700" },
   RECEIVE: { label: "Received", color: "bg-teal-50 text-teal-700" },
   COMPLETE: { label: "Completed", color: "bg-indigo-50 text-indigo-700" },
+  START: { label: "Started", color: "bg-orange-50 text-orange-700" },
+  DELIVER: { label: "Delivered", color: "bg-fuchsia-50 text-fuchsia-700" },
 };
 
 const ENTITY_LABELS: Record<AuditEntityType, string> = {
