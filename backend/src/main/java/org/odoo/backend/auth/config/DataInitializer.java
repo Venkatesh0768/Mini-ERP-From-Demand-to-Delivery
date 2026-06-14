@@ -69,8 +69,8 @@ public class DataInitializer implements CommandLineRunner {
             return;
         }
 
-        // Idempotent: skip if ANY admin already exists
-        if (userRepository.countByRoleName(RoleType.ROLE_ADMIN) > 0) {
+        // Idempotent: skip if this specific admin already exists
+        if (userRepository.existsByEmail(adminEmail.trim().toLowerCase())) {
             log.debug("Admin user already exists — skipping default admin seed");
             return;
         }

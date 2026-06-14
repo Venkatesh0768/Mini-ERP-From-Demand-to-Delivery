@@ -91,6 +91,14 @@ public class ManufacturingServiceImpl implements ManufacturingService {
         ManufacturingOrder saved =
                 manufacturingOrderRepository.save(order);
 
+        auditService.log(
+                AuditAction.CREATE,
+                AuditEntityType.MANUFACTURING_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Created Manufacturing Order " + saved.getOrderNumber()
+        );
+
         return mapToResponse(saved);
     }
 
@@ -130,8 +138,16 @@ public class ManufacturingServiceImpl implements ManufacturingService {
         order.setStatus(
                 ManufacturingOrderStatus.CONFIRMED);
 
-        return mapToResponse(
-                manufacturingOrderRepository.save(order));
+        ManufacturingOrder saved = manufacturingOrderRepository.save(order);
+        auditService.log(
+                AuditAction.APPROVE,
+                AuditEntityType.MANUFACTURING_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Confirmed Manufacturing Order " + saved.getOrderNumber()
+        );
+
+        return mapToResponse(saved);
     }
 
     @Override
@@ -146,8 +162,16 @@ public class ManufacturingServiceImpl implements ManufacturingService {
         order.setStatus(
                 ManufacturingOrderStatus.IN_PROGRESS);
 
-        return mapToResponse(
-                manufacturingOrderRepository.save(order));
+        ManufacturingOrder saved = manufacturingOrderRepository.save(order);
+        auditService.log(
+                AuditAction.START,
+                AuditEntityType.MANUFACTURING_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Started Manufacturing Order " + saved.getOrderNumber()
+        );
+
+        return mapToResponse(saved);
     }
 
     @Override
@@ -216,8 +240,16 @@ public class ManufacturingServiceImpl implements ManufacturingService {
         order.setStatus(
                 ManufacturingOrderStatus.CANCELLED);
 
-        return mapToResponse(
-                manufacturingOrderRepository.save(order));
+        ManufacturingOrder saved = manufacturingOrderRepository.save(order);
+        auditService.log(
+                AuditAction.CANCEL,
+                AuditEntityType.MANUFACTURING_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Cancelled Manufacturing Order " + saved.getOrderNumber()
+        );
+
+        return mapToResponse(saved);
     }
 
     private String generateOrderNumber() {

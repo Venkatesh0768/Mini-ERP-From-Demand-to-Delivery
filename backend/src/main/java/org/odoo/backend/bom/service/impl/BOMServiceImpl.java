@@ -23,6 +23,7 @@ public class BOMServiceImpl
 
     private final BOMRepository bomRepository;
     private final ProductRepository productRepository;
+    private final org.odoo.backend.audit.service.AuditService auditService;
 
     @Override
     public BOMResponse createBOM(
@@ -78,6 +79,13 @@ public class BOMServiceImpl
 
         BOM saved =
                 bomRepository.save(bom);
+        auditService.log(
+                org.odoo.backend.audit.model.AuditAction.CREATE,
+                org.odoo.backend.audit.model.AuditEntityType.BOM,
+                saved.getId().toString(),
+                saved.getBomCode(),
+                "Created BOM " + saved.getBomCode()
+        );
 
         return mapToResponse(saved);
     }
@@ -113,6 +121,13 @@ public class BOMServiceImpl
                                 "BOM not found"));
 
         bomRepository.delete(bom);
+        auditService.log(
+                org.odoo.backend.audit.model.AuditAction.DELETE,
+                org.odoo.backend.audit.model.AuditEntityType.BOM,
+                bom.getId().toString(),
+                bom.getBomCode(),
+                "Deleted BOM " + bom.getBomCode()
+        );
     }
 
     private String generateBomCode() {

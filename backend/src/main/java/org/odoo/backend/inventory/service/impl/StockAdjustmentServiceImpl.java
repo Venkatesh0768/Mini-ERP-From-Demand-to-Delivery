@@ -21,6 +21,7 @@ public class StockAdjustmentServiceImpl
 
     private final StockAdjustmentRepository stockAdjustmentRepository;
     private final ProductRepository productRepository;
+    private final org.odoo.backend.audit.service.AuditService auditService;
 
     @Override
     public StockAdjustmentResponse createAdjustment(
@@ -66,8 +67,16 @@ public class StockAdjustmentServiceImpl
                         .reason(request.getReason())
                         .build();
 
-        return mapToResponse(
-                stockAdjustmentRepository.save(adjustment));
+        StockAdjustment saved = stockAdjustmentRepository.save(adjustment);
+        auditService.log(
+                org.odoo.backend.audit.model.AuditAction.CREATE,
+                org.odoo.backend.audit.model.AuditEntityType.STOCK_ADJUSTMENT,
+                saved.getId().toString(),
+                saved.getAdjustmentNumber(),
+                "Created Stock Adjustment " + saved.getAdjustmentNumber() + " for product " + product.getName()
+        );
+
+        return mapToResponse(saved);
     }
 
     @Override

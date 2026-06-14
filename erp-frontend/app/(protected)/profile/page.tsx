@@ -72,7 +72,7 @@ function ProfileSection({ user, refreshUser }: { user: any; refreshUser: () => P
 
     try {
       const response = await userApi.uploadAvatar(file);
-      setAvatarUrl(response.data.data.profileImageUrl ?? objectUrl);
+      setAvatarUrl(response.data.data?.profileImageUrl ?? objectUrl);
       await refreshUser();
       setSuccess("Profile image updated.");
     } catch (err) {

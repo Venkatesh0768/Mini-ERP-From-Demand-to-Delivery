@@ -32,6 +32,7 @@ public class SalesOrderServiceImpl
     private final SalesOrderRepository salesOrderRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final org.odoo.backend.audit.service.AuditService auditService;
 
     @Override
     public SalesOrderResponse createSalesOrder(
@@ -86,6 +87,14 @@ public class SalesOrderServiceImpl
 
         SalesOrder saved =
                 salesOrderRepository.save(order);
+
+        auditService.log(
+                org.odoo.backend.audit.model.AuditAction.CREATE,
+                org.odoo.backend.audit.model.AuditEntityType.SALES_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Created Sales Order " + saved.getOrderNumber()
+        );
 
         return mapToResponse(saved);
     }
@@ -142,8 +151,16 @@ public class SalesOrderServiceImpl
         order.setStatus(
                 SalesOrderStatus.CONFIRMED);
 
-        return mapToResponse(
-                salesOrderRepository.save(order));
+        SalesOrder saved = salesOrderRepository.save(order);
+        auditService.log(
+                org.odoo.backend.audit.model.AuditAction.APPROVE,
+                org.odoo.backend.audit.model.AuditEntityType.SALES_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Confirmed Sales Order " + saved.getOrderNumber()
+        );
+
+        return mapToResponse(saved);
     }
 
     @Override
@@ -172,8 +189,16 @@ public class SalesOrderServiceImpl
         order.setStatus(
                 SalesOrderStatus.CANCELLED);
 
-        return mapToResponse(
-                salesOrderRepository.save(order));
+        SalesOrder saved = salesOrderRepository.save(order);
+        auditService.log(
+                org.odoo.backend.audit.model.AuditAction.CANCEL,
+                org.odoo.backend.audit.model.AuditEntityType.SALES_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Cancelled Sales Order " + saved.getOrderNumber()
+        );
+
+        return mapToResponse(saved);
     }
 
     private String generateOrderNumber() {

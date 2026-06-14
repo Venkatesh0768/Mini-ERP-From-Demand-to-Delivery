@@ -141,11 +141,16 @@ public class PurchaseOrderServiceImpl
                     "Only DRAFT orders can be confirmed");
         }
 
-        order.setStatus(
-                PurchaseOrderStatus.CONFIRMED);
+        PurchaseOrder saved = purchaseOrderRepository.save(order);
+        auditService.log(
+                AuditAction.APPROVE,
+                AuditEntityType.PURCHASE_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Confirmed Purchase Order " + saved.getOrderNumber()
+        );
 
-        return mapToResponse(
-                purchaseOrderRepository.save(order));
+        return mapToResponse(saved);
     }
 
     @Override
@@ -181,11 +186,16 @@ public class PurchaseOrderServiceImpl
                     item.getOrderedQty());
         }
 
-        order.setStatus(
-                PurchaseOrderStatus.RECEIVED);
+        PurchaseOrder saved = purchaseOrderRepository.save(order);
+        auditService.log(
+                AuditAction.RECEIVE,
+                AuditEntityType.PURCHASE_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Received Purchase Order " + saved.getOrderNumber()
+        );
 
-        return mapToResponse(
-                purchaseOrderRepository.save(order));
+        return mapToResponse(saved);
     }
 
     @Override
@@ -198,11 +208,16 @@ public class PurchaseOrderServiceImpl
                                 new RuntimeException(
                                         "Purchase Order not found"));
 
-        order.setStatus(
-                PurchaseOrderStatus.CANCELLED);
+        PurchaseOrder saved = purchaseOrderRepository.save(order);
+        auditService.log(
+                AuditAction.CANCEL,
+                AuditEntityType.PURCHASE_ORDER,
+                saved.getId().toString(),
+                saved.getOrderNumber(),
+                "Cancelled Purchase Order " + saved.getOrderNumber()
+        );
 
-        return mapToResponse(
-                purchaseOrderRepository.save(order));
+        return mapToResponse(saved);
     }
 
     private String generateOrderNumber() {

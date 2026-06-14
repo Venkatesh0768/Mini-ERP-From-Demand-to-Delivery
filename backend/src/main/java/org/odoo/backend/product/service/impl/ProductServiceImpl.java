@@ -138,8 +138,9 @@ public class ProductServiceImpl implements ProductService {
         product.setProcureOnDemand(
                 request.isProcureOnDemand());
 
-        return mapToResponse(
-                productRepository.save(product));
+        Product saved = productRepository.save(product);
+        auditService.log(AuditAction.UPDATE, AuditEntityType.PRODUCT, saved.getId().toString(), saved.getName(), "Updated Product " + saved.getName());
+        return mapToResponse(saved);
     }
 
     @Override
@@ -152,6 +153,7 @@ public class ProductServiceImpl implements ProductService {
                                 "Product not found"));
 
         productRepository.delete(product);
+        auditService.log(AuditAction.DELETE, AuditEntityType.PRODUCT, product.getId().toString(), product.getName(), "Deleted Product " + product.getName());
     }
 
     private String generateProductCode() {

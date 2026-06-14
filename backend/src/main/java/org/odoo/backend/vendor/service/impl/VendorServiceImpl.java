@@ -21,6 +21,7 @@ import org.springframework.cache.annotation.CacheEvict;
 public class VendorServiceImpl implements VendorService {
 
     private final VendorRepository vendorRepository;
+    private final org.odoo.backend.audit.service.AuditService auditService;
 
     @Override
     @CacheEvict(value = "vendors", allEntries = true)
@@ -36,6 +37,7 @@ public class VendorServiceImpl implements VendorService {
 
         Vendor savedVendor =
                 vendorRepository.save(vendor);
+        auditService.log(org.odoo.backend.audit.model.AuditAction.CREATE, org.odoo.backend.audit.model.AuditEntityType.VENDOR, savedVendor.getId().toString(), savedVendor.getName(), "Created Vendor " + savedVendor.getName());
 
         return mapToResponse(savedVendor);
     }
@@ -80,8 +82,10 @@ public class VendorServiceImpl implements VendorService {
         vendor.setPhone(request.getPhone());
         vendor.setAddress(request.getAddress());
 
-        return mapToResponse(
-                vendorRepository.save(vendor));
+        Vendor savedVendor = vendorRepository.save(vendor);
+        auditService.log(org.odoo.backend.audit.model.AuditAction.UPDATE, org.odoo.backend.audit.model.AuditEntityType.VENDOR, savedVendor.getId().toString(), savedVendor.getName(), "Updated Vendor " + savedVendor.getName());
+
+        return mapToResponse(savedVendor);
     }
 
     @Override
@@ -94,6 +98,7 @@ public class VendorServiceImpl implements VendorService {
                                 "Vendor not found"));
 
         vendorRepository.delete(vendor);
+        auditService.log(org.odoo.backend.audit.model.AuditAction.DELETE, org.odoo.backend.audit.model.AuditEntityType.VENDOR, vendor.getId().toString(), vendor.getName(), "Deleted Vendor " + vendor.getName());
     }
 
     private String generateVendorCode() {

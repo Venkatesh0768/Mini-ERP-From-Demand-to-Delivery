@@ -21,6 +21,7 @@ import org.springframework.cache.annotation.CacheEvict;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final org.odoo.backend.audit.service.AuditService auditService;
 
     @Override
     @CacheEvict(value = "customers", allEntries = true)
@@ -36,6 +37,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         Customer saved =
                 customerRepository.save(customer);
+        auditService.log(org.odoo.backend.audit.model.AuditAction.CREATE, org.odoo.backend.audit.model.AuditEntityType.CUSTOMER, saved.getId().toString(), saved.getName(), "Created Customer " + saved.getName());
 
         return mapToResponse(saved);
     }
@@ -82,8 +84,10 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setPhone(request.getPhone());
         customer.setAddress(request.getAddress());
 
-        return mapToResponse(
-                customerRepository.save(customer));
+        Customer saved = customerRepository.save(customer);
+        auditService.log(org.odoo.backend.audit.model.AuditAction.UPDATE, org.odoo.backend.audit.model.AuditEntityType.CUSTOMER, saved.getId().toString(), saved.getName(), "Updated Customer " + saved.getName());
+
+        return mapToResponse(saved);
     }
 
     @Override
@@ -97,6 +101,7 @@ public class CustomerServiceImpl implements CustomerService {
                                         "Customer not found"));
 
         customerRepository.delete(customer);
+        auditService.log(org.odoo.backend.audit.model.AuditAction.DELETE, org.odoo.backend.audit.model.AuditEntityType.CUSTOMER, customer.getId().toString(), customer.getName(), "Deleted Customer " + customer.getName());
     }
 
     private String generateCustomerCode() {
