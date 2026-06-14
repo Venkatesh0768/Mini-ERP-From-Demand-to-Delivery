@@ -2,6 +2,8 @@
 
 A full-stack, production-ready Enterprise Resource Planning system built with **Spring Boot 4** and **Next.js 16**. It covers the complete business cycle — from customer demand through procurement, manufacturing, and inventory to final delivery — with role-based access control, OAuth2 social login, and a real-time audit trail.
 
+Video Link 
+https://drive.google.com/file/d/1JYzDSeo-LXRDNv5P-pyL9C-lss_QPR2O/view   Watch at 2X
 ---
 
 ## Table of Contents
@@ -18,9 +20,6 @@ A full-stack, production-ready Enterprise Resource Planning system built with **
 - [Default Admin Account](#default-admin-account)
 
 ---
-
-Video Link 
-https://drive.google.com/file/d/1JYzDSeo-LXRDNv5P-pyL9C-lss_QPR2O/view   Watch at 2X
 
 <img width="1581" height="813" alt="Screenshot 2026-06-14 031421" src="https://github.com/user-attachments/assets/f7d88b37-3aaf-44db-893a-bbadbc9c5054" />
 <img width="1904" height="911" alt="Screenshot 2026-06-14 031508" src="https://github.com/user-attachments/assets/460e056a-0fc8-46d9-b279-1830b6c7b260" />
