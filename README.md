@@ -2,6 +2,9 @@
 
 A full-stack, production-ready Enterprise Resource Planning system built with **Spring Boot 4** and **Next.js 16**. It covers the complete business cycle — from customer demand through procurement, manufacturing, and inventory to final delivery — with role-based access control, OAuth2 social login, and a real-time audit trail.
 
+Video Link 
+https://drive.google.com/file/d/1JYzDSeo-LXRDNv5P-pyL9C-lss_QPR2O/view
+
 ---
 
 ## Table of Contents
@@ -477,5 +480,4 @@ GET http://localhost:5000/api/v1/actuator/health
 Returns `{ "status": "UP" }` — no authentication required.
 
 
-Video Link 
-https://drive.google.com/file/d/1JYzDSeo-LXRDNv5P-pyL9C-lss_QPR2O/view
+
