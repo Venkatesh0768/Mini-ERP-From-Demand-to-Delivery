@@ -35,10 +35,7 @@ services:
       retries: 5
 
   erp_backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: erp_backend:latest
+    image: venkatesh0768/mini-erp-backend:latest
     container_name: erp_backend
     environment:
       # Spring
@@ -92,15 +89,7 @@ services:
     restart: always
 
   erp_frontend:
-    build:
-      context: ./erp-frontend
-      dockerfile: Dockerfile
-      args:
-        # NEXT_PUBLIC_* are baked at build time — must be the URL the
-        # user's BROWSER will call (not the Docker internal hostname)
-        NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
-        NEXT_PUBLIC_APP_NAME: StoryStack
-    image: erp_frontend:latest
+    image: venkatesh0768/mini-erp-frontend:latest
     container_name: erp_frontend
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:5000/api/v1
